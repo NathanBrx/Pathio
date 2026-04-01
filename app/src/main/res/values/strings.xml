@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Pathio</string>
+    <string name="sloganpt1">DE LA PHOTO</string>
+    <string name="sloganpt2">AU SAC À DOS</string>
+    <string name="goToTravelShare">Partagez vos souvenirs</string>
+    <string name="travelShareSubtitle">Découvrez des milliers de photos de voyages et partagez les vôtres</string>
+    <string name="discover">Découvrir</string>
+    <string name="goToTravelPath">Visitez vos endroits favoris</string>
+    <string name="travelPathSubtitle">Faites vous guider à travers un parcours adapté à vos besoins</string>
+    <string name="visit">Visiter</string>
 </resources>
