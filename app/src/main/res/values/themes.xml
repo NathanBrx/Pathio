@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.Pathio" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:fontFamily">@font/plusjakartasans</item>
+        <item name="fontFamily">@font/plusjakartasans</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
 
-    <style name="Theme.Pathio" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="ClickableCard" parent="Widget.MaterialComponents.CardView">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?android:attr/selectableItemBackground</item>
+    </style>
 </resources>
