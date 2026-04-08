@@ -17,7 +17,7 @@
     <string name="activites">ACTIVITÉS</string>
     <string name="budget">Budget</string>
     <string name="budgetBorneBasse">0€</string>
-    <string name="budgetBorneHaute">1000€</string>
+    <string name="budgetBorneHaute">1000€+</string>
     <string name="duration">Durée</string>
     <string name="journee">Journée</string>
     <string name="demiJournee">Demi journée</string>
@@ -41,4 +41,5 @@
     <string name="priorityPlaces">NOUS VEILLERONS À CE QUE CES LIEUX FIGURENT EN PRIORITÉ DANS VOTRE ITINÉRAIRE.</string>
     <string name="generatePath">Générer mon itinéraire</string>
     <string name="personalRequest">Requêtes personnelles</string>
+    <string name="selectPath">Sélectionnez votre itinéraire</string>
 </resources>
