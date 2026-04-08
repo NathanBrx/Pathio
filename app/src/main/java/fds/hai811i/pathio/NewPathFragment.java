@@ -17,50 +17,50 @@ import com.google.android.material.slider.RangeSlider;
 
 import java.util.Locale;
 
+import fds.hai811i.pathio.databinding.FragmentNewPathBinding;
+
 public class NewPathFragment extends Fragment {
+    private FragmentNewPathBinding binding;
     private final int COLOR_INACTIVE_TEXT = Color.parseColor("#000000");
     private final int COLOR_WHITE = Color.parseColor("#FFFFFF");
     private final int COLOR_ACTIVE_ORANGE = Color.parseColor("#D45D3B");
     private final int COLOR_ACTIVE_DARK = Color.parseColor("#2D3142");
     RangeSlider budget;
-    TextView currentMinBudget, currentMaxBudget;
 
     public NewPathFragment(){}
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_new_path, container, false);
+        binding = FragmentNewPathBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        initConstraintToggle(view, R.id.cardCulture, R.id.textCulture, 0, 0, COLOR_ACTIVE_ORANGE);
-        initConstraintToggle(view, R.id.cardLoisirs, R.id.textLoisirs, 0, 0, COLOR_ACTIVE_ORANGE);
-        initConstraintToggle(view, R.id.cardFood, R.id.textFood, 0, 0, COLOR_ACTIVE_ORANGE);
-        initConstraintToggle(view, R.id.cardDiscover, R.id.textDiscover, R.id.iconDiscover, R.id.circleDiscover, COLOR_ACTIVE_ORANGE);
+        setupToggle(binding.cardCulture, binding.textCulture, binding.iconCulture, binding.circleCulture, COLOR_ACTIVE_ORANGE);
+        setupToggle(binding.cardLoisirs, binding.textLoisirs, binding.iconLoisirs, binding.circleLoisirs, COLOR_ACTIVE_ORANGE);
+        setupToggle(binding.cardFood, binding.textFood, binding.iconFood, binding.circleFood, COLOR_ACTIVE_ORANGE);
+        setupToggle(binding.cardDiscover, binding.textDiscover, binding.iconDiscover, binding.circleDiscover, COLOR_ACTIVE_ORANGE);
 
-        initConstraintToggle(view, R.id.card2Hours, R.id.text2Hours, 0, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardHalfDay, R.id.textHalfDay, 0, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardFullDay, R.id.textFullDay, 0, 0, COLOR_ACTIVE_DARK);
+        setupToggle(binding.card2Hours, binding.text2Hours, null, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardHalfDay, binding.textHalfDay, null, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardFullDay, binding.textFullDay, null, null, COLOR_ACTIVE_DARK);
 
-        initConstraintToggle(view, R.id.cardEffortFaible, R.id.textEffortFaible, 0, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardEffortModere, R.id.textEffortModere, 0, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardEffortEleve, R.id.textEffortEleve, 0, 0, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardEffortFaible, binding.textEffortFaible, null, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardEffortModere, binding.textEffortModere, null, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardEffortEleve, binding.textEffortEleve, null, null, COLOR_ACTIVE_DARK);
 
-        initConstraintToggle(view, R.id.cardOldPeople, R.id.textOldPeople, R.id.iconOldPeople, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardEnfant, R.id.textEnfant, R.id.iconEnfant, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardPMAPMR, R.id.textPMAPMR, R.id.iconPMAPMR, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardFroid, R.id.textFroid, R.id.iconFroid, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardChaud, R.id.textChaud, R.id.iconChaud, 0, COLOR_ACTIVE_DARK);
-        initConstraintToggle(view, R.id.cardWater, R.id.textWater, R.id.iconWater, 0, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardOldPeople, binding.textOldPeople, binding.iconOldPeople, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardEnfant, binding.textEnfant, binding.iconEnfant, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardPMAPMR, binding.textPMAPMR, binding.iconPMAPMR, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardFroid, binding.textFroid, binding.iconFroid, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardChaud, binding.textChaud, binding.iconChaud, null, COLOR_ACTIVE_DARK);
+        setupToggle(binding.cardWater, binding.textWater, binding.iconWater, null, COLOR_ACTIVE_DARK);
 
-        currentMinBudget = view.findViewById(R.id.currentMinBudget);
-        currentMaxBudget = view.findViewById(R.id.currentMaxBudget);
-
-        budget = view.findViewById(R.id.rangeSliderBudget);
+        budget = binding.rangeSliderBudget;
         budget.setValues(150f, 450f);
         updateBudgetText(150, 450);
 
@@ -70,20 +70,17 @@ public class NewPathFragment extends Fragment {
 
             updateBudgetText(minVal, maxVal);
         });
+
+        binding.btnGenerateItinerary.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer, new ItineraryListFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
     }
 
-    private void initConstraintToggle(View view, int cardId, int textId, int iconId, int circleId, int activeColor) {
-        CardView card = view.findViewById(cardId);
-        TextView text = view.findViewById(textId);
-        ImageView icon = (iconId != 0) ? view.findViewById(iconId) : null;
-        CardView circle = (circleId != 0) ? view.findViewById(circleId) : null;
-
-        if (card != null && text != null) {
-            setupToggleSelection(card, text, icon, circle,activeColor);
-        }
-    }
-
-    private void setupToggleSelection(CardView card, TextView text, @Nullable ImageView icon, @Nullable CardView circle, int activeColorBg) {
+    private void setupToggle(CardView card, TextView text, @Nullable ImageView icon, @Nullable CardView circle, int activeColorBg) {
         card.setOnClickListener(v -> {
             boolean isNowSelected = !v.isSelected();
             v.setSelected(isNowSelected);
@@ -109,7 +106,13 @@ public class NewPathFragment extends Fragment {
     }
 
     private void updateBudgetText(int min, int max) {
-        currentMinBudget.setText(String.format(Locale.getDefault(), "%d", min));
-        currentMaxBudget.setText(String.format(Locale.getDefault(), "%d", max));
+        binding.currentMinBudget.setText(String.format(Locale.getDefault(), "%d", min));
+        binding.currentMaxBudget.setText(String.format(Locale.getDefault(), "%d", max));
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }
