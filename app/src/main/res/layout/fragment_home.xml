@@ -63,6 +63,7 @@
 
         <androidx.cardview.widget.CardView
             android:id="@+id/travelShareCard"
+            style="@style/ClickableCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
@@ -140,6 +141,7 @@
 
         <androidx.cardview.widget.CardView
             android:id="@+id/travelPathCard"
+            style="@style/ClickableCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"

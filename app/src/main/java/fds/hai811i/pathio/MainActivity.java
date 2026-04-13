@@ -2,17 +2,17 @@ package fds.hai811i.pathio;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
+import fds.hai811i.pathio.databinding.ActivityMainBinding;
+
 public class MainActivity extends AppCompatActivity {
+    private ActivityMainBinding binding;
     private CardView[] navBackgrounds;
-    private ImageView[] navIcons;
+    private android.widget.ImageView[] navIcons;
     private final int COLOR_ACTIVE_BG = Color.parseColor("#B84B25");
     private final int COLOR_INACTIVE_BG = Color.TRANSPARENT;
     private final int COLOR_ACTIVE_ICON = Color.WHITE;
@@ -21,28 +21,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        FrameLayout navAdd = findViewById(R.id.navAdd);
-        FrameLayout navMap = findViewById(R.id.navMap);
-        FrameLayout navHome = findViewById(R.id.navHome);
-        FrameLayout navGallery = findViewById(R.id.navGallery);
-        FrameLayout navProfile = findViewById(R.id.navProfile);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         navBackgrounds = new CardView[]{
-                findViewById(R.id.bgAdd),
-                findViewById(R.id.bgMap),
-                findViewById(R.id.bgHome),
-                findViewById(R.id.bgGallery),
-                findViewById(R.id.bgProfile)
+                binding.bgAdd,
+                binding.bgMap,
+                binding.bgHome,
+                binding.bgGallery,
+                binding.bgProfile
         };
 
-        navIcons = new ImageView[]{
-                findViewById(R.id.iconAdd),
-                findViewById(R.id.iconMap),
-                findViewById(R.id.iconHome),
-                findViewById(R.id.iconGallery),
-                findViewById(R.id.iconProfile)
+        navIcons = new android.widget.ImageView[]{
+                binding.iconAdd,
+                binding.iconMap,
+                binding.iconHome,
+                binding.iconGallery,
+                binding.iconProfile
         };
 
         if (savedInstanceState == null) {
@@ -50,30 +45,11 @@ public class MainActivity extends AppCompatActivity {
             updateNavUI(2);
         }
 
-        navAdd.setOnClickListener(v -> {
-            updateNavUI(0);
-            loadFragment(new NewPathFragment());
-        });
-
-        navMap.setOnClickListener(v -> {
-            updateNavUI(1);
-            // loadFragment(new MapFragment());
-        });
-
-        navHome.setOnClickListener(v -> {
-            updateNavUI(2);
-            loadFragment(new HomeFragment());
-        });
-
-        navGallery.setOnClickListener(v -> {
-            updateNavUI(3);
-            // loadFragment(new GalleryFragment());
-        });
-
-        navProfile.setOnClickListener(v -> {
-            updateNavUI(4);
-            // loadFragment(new ProfileFragment());
-        });
+        binding.navAdd.setOnClickListener(v -> navigateTo(new NewPathFragment(), 0));
+        binding.navMap.setOnClickListener(v -> navigateTo(new MapFragment(), 1));
+        binding.navHome.setOnClickListener(v -> navigateTo(new HomeFragment(), 2));
+        binding.navGallery.setOnClickListener(v -> updateNavUI(3));
+        binding.navProfile.setOnClickListener(v -> navigateTo(new ProfileFragment(), 4));
     }
 
     private void updateNavUI(int selectedIndex) {
@@ -93,5 +69,10 @@ public class MainActivity extends AppCompatActivity {
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)
                 .commit();
+    }
+
+    public void navigateTo(Fragment fragment, int navIndex) {
+        updateNavUI(navIndex);
+        loadFragment(fragment);
     }
 }
