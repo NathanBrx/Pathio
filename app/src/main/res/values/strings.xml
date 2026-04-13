@@ -42,4 +42,13 @@
     <string name="generatePath">Générer mon itinéraire</string>
     <string name="personalRequest">Requêtes personnelles</string>
     <string name="selectPath">Sélectionnez votre itinéraire</string>
+    <string name="login">Se connecter</string>
+    <string name="register">Créer un compte</string>
+    <string name="joinPathio">Rejoignez la communauté Pathio</string>
+    <string name="username">Nom d\'utilisateur</string>
+    <string name="email">Adresse e-mail</string>
+    <string name="password">Mot de passe</string>
+    <string name="confirmPassword">Confirmer le mot de passe</string>
+    <string name="accountAlreadyExists">Déjà un compte ? Se connecter</string>
+    <string name="usernameEmail">Nom d\'utilisateur / Email</string>
 </resources>
