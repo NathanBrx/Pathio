@@ -51,4 +51,6 @@
     <string name="confirmPassword">Confirmer le mot de passe</string>
     <string name="accountAlreadyExists">Déjà un compte ? Se connecter</string>
     <string name="usernameEmail">Nom d\'utilisateur / Email</string>
+    <string name="createAccount">Pas de compte ? Créer un compte</string>
+    <string name="forgottenPassword">Mot de passe oublié</string>
 </resources>
