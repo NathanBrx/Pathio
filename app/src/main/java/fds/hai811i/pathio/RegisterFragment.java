@@ -13,7 +13,8 @@ import androidx.fragment.app.Fragment;
 import java.util.Objects;
 
 import fds.hai811i.pathio.databinding.FragmentRegisterBinding;
-import fds.hai811i.pathio.model.RegisterRequest;
+import fds.hai811i.pathio.model.requests.RegisterRequest;
+import fds.hai811i.pathio.model.responses.RegisterResponse;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -56,27 +57,25 @@ public class RegisterFragment extends Fragment {
 
             binding.errorText.setVisibility(View.GONE);
 
-            RetrofitClient.getApi().register(new RegisterRequest(email, username, password))
-                    .enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                            if (response.isSuccessful()) {
-                                requireActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getContext(), "Inscrit avec succès !", Toast.LENGTH_SHORT).show();
-                                    ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4);
-                                });
-                            } else {
-                                requireActivity().runOnUiThread(() ->
-                                        Toast.makeText(getContext(), "Erreur lors de l'inscription", Toast.LENGTH_SHORT).show()
-                                );
-                            }
-                        }
+            RetrofitClient.getApi(requireContext()).register(new RegisterRequest(email, username, password)).enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
 
-                        @Override
-                        public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                            System.err.println(t.getMessage());
-                        }
-                    });
+                        Toast.makeText(getContext(), "Inscrit avec succès !", Toast.LENGTH_SHORT).show();
+                        ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4);
+
+                    } else {
+                        Toast.makeText(getContext(), "Erreur lors de l'inscription", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
+                    System.err.println("Registration failed: " + t.getMessage());
+                    Toast.makeText(getContext(), "Erreur réseau", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         binding.linkLogin.setOnClickListener(v ->

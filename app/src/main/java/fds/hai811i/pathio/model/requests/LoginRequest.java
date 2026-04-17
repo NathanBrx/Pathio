@@ -1,4 +1,4 @@
-package fds.hai811i.pathio.model;
+package fds.hai811i.pathio.model.requests;
 
 public class LoginRequest {
     String identifier, password;

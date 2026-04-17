@@ -1,4 +1,4 @@
-package fds.hai811i.pathio.model;
+package fds.hai811i.pathio.model.requests;
 
 public class RegisterRequest {
     String email, username, password;
