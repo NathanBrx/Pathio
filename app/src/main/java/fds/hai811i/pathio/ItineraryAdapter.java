@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import fds.hai811i.pathio.databinding.ItemItineraryBinding;
+import fds.hai811i.pathio.model.Itinerary;
 
 public class ItineraryAdapter extends RecyclerView.Adapter<ItineraryAdapter.ViewHolder> {
 

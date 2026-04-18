@@ -1,4 +1,4 @@
-package fds.hai811i.pathio;
+package fds.hai811i.pathio.model;
 
 public class Itinerary {
     public String title;

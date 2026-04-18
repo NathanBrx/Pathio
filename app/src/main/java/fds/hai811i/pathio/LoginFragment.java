@@ -12,14 +12,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import org.json.JSONObject;
-
 import java.util.Objects;
 
 import fds.hai811i.pathio.databinding.FragmentLoginBinding;
 import fds.hai811i.pathio.model.requests.LoginRequest;
 import fds.hai811i.pathio.model.responses.LoginResponse;
-import okhttp3.ResponseBody;
+import fds.hai811i.pathio.utils.RetrofitClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

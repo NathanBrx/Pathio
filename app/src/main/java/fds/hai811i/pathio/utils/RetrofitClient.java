@@ -1,4 +1,4 @@
-package fds.hai811i.pathio;
+package fds.hai811i.pathio.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;

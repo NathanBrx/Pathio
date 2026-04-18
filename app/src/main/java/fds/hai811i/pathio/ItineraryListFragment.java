@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fds.hai811i.pathio.databinding.FragmentItineraryListBinding;
+import fds.hai811i.pathio.model.Itinerary;
 
 public class ItineraryListFragment extends Fragment {
     private FragmentItineraryListBinding binding;
