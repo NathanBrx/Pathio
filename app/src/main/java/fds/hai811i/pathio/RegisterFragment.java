@@ -15,7 +15,7 @@ import java.util.Objects;
 import fds.hai811i.pathio.databinding.FragmentRegisterBinding;
 import fds.hai811i.pathio.model.requests.RegisterRequest;
 import fds.hai811i.pathio.model.responses.RegisterResponse;
-import okhttp3.ResponseBody;
+import fds.hai811i.pathio.utils.RetrofitClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

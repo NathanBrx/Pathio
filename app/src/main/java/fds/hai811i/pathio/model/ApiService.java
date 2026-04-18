@@ -1,7 +1,11 @@
 package fds.hai811i.pathio.model;
 
+import java.util.List;
+
 import fds.hai811i.pathio.model.requests.*;
 import fds.hai811i.pathio.model.responses.*;
+import okhttp3.MultipartBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -14,4 +18,11 @@ public interface ApiService {
 
     @GET("api/profile")
     Call<ProfileResponse> profile();
+
+    @GET("api/posts")
+    Call<List<Post>> getPosts();
+
+    @Multipart
+    @PUT("api/profile/avatar/upload")
+    Call<ResponseBody> uploadAvatar(@Part MultipartBody.Part avatarFile);
 }

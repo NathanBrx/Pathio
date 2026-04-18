@@ -4,6 +4,7 @@ public class User {
     private int id;
     private String email;
     private String username;
+    private String avatarUrl;
 
     // Getters
     public int getId() {
@@ -14,5 +15,8 @@ public class User {
     }
     public String getUsername() {
         return username;
+    }
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 }
