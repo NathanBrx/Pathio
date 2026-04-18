@@ -37,9 +37,9 @@
             app:layout_constraintEnd_toEndOf="parent"/>
 
         <androidx.cardview.widget.CardView
-            android:id="@+id/profilePic"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/cardProfilePic"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_marginTop="48dp"
             app:cardCornerRadius="48dp"
             app:cardElevation="4dp"
@@ -48,10 +48,32 @@
             app:layout_constraintEnd_toEndOf="parent">
 
             <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/outline_person_24"
-                android:layout_margin="20dp"/>
+                android:id="@+id/profilePic"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/outline_person_24"/>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/btnEditAvatar"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            app:layout_constraintBottom_toBottomOf="@id/cardProfilePic"
+            app:layout_constraintEnd_toEndOf="@id/cardProfilePic">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/baseline_edit_24"
+                app:tint="#B84B25" />
 
         </androidx.cardview.widget.CardView>
 
@@ -63,7 +85,7 @@
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="#1A202C"
-            app:layout_constraintTop_toBottomOf="@id/profilePic"
+            app:layout_constraintTop_toBottomOf="@id/cardProfilePic"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
