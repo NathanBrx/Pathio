@@ -45,13 +45,29 @@ public class NewPathFragment extends Fragment {
         setupToggle(binding.cardFood, binding.textFood, binding.iconFood, binding.circleFood, COLOR_ACTIVE_ORANGE);
         setupToggle(binding.cardDiscover, binding.textDiscover, binding.iconDiscover, binding.circleDiscover, COLOR_ACTIVE_ORANGE);
 
-        setupToggle(binding.card2Hours, binding.text2Hours, null, null, COLOR_ACTIVE_DARK);
-        setupToggle(binding.cardHalfDay, binding.textHalfDay, null, null, COLOR_ACTIVE_DARK);
-        setupToggle(binding.cardFullDay, binding.textFullDay, null, null, COLOR_ACTIVE_DARK);
+        CardView[] durationCards = {binding.card2Hours, binding.cardHalfDay, binding.cardFullDay};
+        TextView[] durationTexts = {binding.text2Hours, binding.textHalfDay, binding.textFullDay};
 
-        setupToggle(binding.cardEffortFaible, binding.textEffortFaible, null, null, COLOR_ACTIVE_DARK);
-        setupToggle(binding.cardEffortModere, binding.textEffortModere, null, null, COLOR_ACTIVE_DARK);
-        setupToggle(binding.cardEffortEleve, binding.textEffortEleve, null, null, COLOR_ACTIVE_DARK);
+        // custom duration input handling
+        Runnable onDurationCardClicked = () -> {
+            binding.inputCustomHours.clearFocus();
+            binding.inputCustomHours.setText("");
+        };
+        setupExclusiveGroup(durationCards, durationTexts, COLOR_ACTIVE_DARK, onDurationCardClicked);
+
+        // if the user focuses the custom input, deselect all duration cards
+        binding.inputCustomHours.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                for (int i = 0; i < durationCards.length; i++) {
+                    durationCards[i].setSelected(false);
+                    updateToggleVisuals(durationCards[i], durationTexts[i], null, null, COLOR_ACTIVE_DARK, false);
+                }
+            }
+        });
+
+        CardView[] effortCards = {binding.cardEffortFaible, binding.cardEffortModere, binding.cardEffortEleve};
+        TextView[] effortTexts = {binding.textEffortFaible, binding.textEffortModere, binding.textEffortEleve};
+        setupExclusiveGroup(effortCards, effortTexts, COLOR_ACTIVE_DARK, null);
 
         setupToggle(binding.cardOldPeople, binding.textOldPeople, binding.iconOldPeople, null, COLOR_ACTIVE_DARK);
         setupToggle(binding.cardEnfant, binding.textEnfant, binding.iconEnfant, null, COLOR_ACTIVE_DARK);
@@ -80,29 +96,70 @@ public class NewPathFragment extends Fragment {
         });
     }
 
+    /**
+     * Sélection normale (plusieurs choix simultanés possibles)
+     * @param card "Bouton"
+     * @param text Texte du bouton
+     * @param icon Icône du bouton
+     * @param circle Cercle autour de l'icône pour certains boutons
+     * @param activeColorBg Couleur choisie pour le fond d'un bouton lorsqu'il est sélectionné
+     */
     private void setupToggle(CardView card, TextView text, @Nullable ImageView icon, @Nullable CardView circle, int activeColorBg) {
         card.setOnClickListener(v -> {
             boolean isNowSelected = !v.isSelected();
             v.setSelected(isNowSelected);
+            updateToggleVisuals(card, text, icon, circle, activeColorBg, isNowSelected);
+        });
+    }
 
-            if (isNowSelected) {
-                card.setCardBackgroundColor(activeColorBg);
-                text.setTextColor(COLOR_WHITE);
-                if (icon != null) icon.setColorFilter(COLOR_WHITE);
-                if (circle != null) circle.setCardBackgroundColor(Color.parseColor("#33FFFFFF"));
-            } else {
-                card.setCardBackgroundColor(COLOR_WHITE);
-                text.setTextColor(COLOR_INACTIVE_TEXT);
-                if (icon != null) {
-                    if (circle != null) {
-                        circle.setCardBackgroundColor(Color.parseColor("#EAE4DD"));
-                        icon.setColorFilter(COLOR_ACTIVE_ORANGE);
+    /**
+     * Sélection style bouton radio : quand un de la liste est sélectionné, les autres sont désélectionnés.
+     * @param cards Liste de "boutons"
+     * @param texts Liste des textes des "boutons"
+     * @param activeColorBg Couleur choisie pour le fond d'un bouton lorsqu'il est sélectionné
+     * @param onSelectedCallback Callback exécuté lorsqu'une carte est sélectionnée
+     */
+    private void setupExclusiveGroup(CardView[] cards, TextView[] texts, int activeColorBg, @Nullable Runnable onSelectedCallback) {
+        for (int i = 0; i < cards.length; i++) {
+            final int clickedIndex = i;
+            cards[i].setOnClickListener(v -> {
+                boolean isNowSelected = !v.isSelected();
+
+                for (int j = 0; j < cards.length; j++) {
+                    if (j == clickedIndex) {
+                        cards[j].setSelected(isNowSelected);
+                        updateToggleVisuals(cards[j], texts[j], null, null, activeColorBg, isNowSelected);
                     } else {
-                        icon.setColorFilter(COLOR_INACTIVE_TEXT);
+                        cards[j].setSelected(false);
+                        updateToggleVisuals(cards[j], texts[j], null, null, activeColorBg, false);
                     }
                 }
+
+                if (isNowSelected && onSelectedCallback != null) {
+                    onSelectedCallback.run();
+                }
+            });
+        }
+    }
+
+    private void updateToggleVisuals(CardView card, TextView text, @Nullable ImageView icon, @Nullable CardView circle, int activeColorBg, boolean isSelected) {
+        if (isSelected) {
+            card.setCardBackgroundColor(activeColorBg);
+            text.setTextColor(COLOR_WHITE);
+            if (icon != null) icon.setColorFilter(COLOR_WHITE);
+            if (circle != null) circle.setCardBackgroundColor(Color.parseColor("#33FFFFFF"));
+        } else {
+            card.setCardBackgroundColor(COLOR_WHITE);
+            text.setTextColor(COLOR_INACTIVE_TEXT);
+            if (icon != null) {
+                if (circle != null) {
+                    circle.setCardBackgroundColor(Color.parseColor("#EAE4DD"));
+                    icon.setColorFilter(COLOR_ACTIVE_ORANGE);
+                } else {
+                    icon.setColorFilter(COLOR_INACTIVE_TEXT);
+                }
             }
-        });
+        }
     }
 
     private void updateBudgetText(int min, int max) {
