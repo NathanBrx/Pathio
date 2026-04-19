@@ -84,7 +84,7 @@ public class ProfileFragment extends Fragment {
 
                         if (avatarUrl != null) {
                             Glide.with(requireContext())
-                                .load("https://www.zerohour.fr/" + avatarUrl)
+                                .load("https://www.zerohour.fr" + avatarUrl)
                                 .circleCrop()
                                 .into(binding.profilePic);
                         }
