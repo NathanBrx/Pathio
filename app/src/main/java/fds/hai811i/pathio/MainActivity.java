@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import fds.hai811i.pathio.databinding.ActivityMainBinding;
 
@@ -17,6 +18,13 @@ public class MainActivity extends AppCompatActivity {
     private final int COLOR_INACTIVE_BG = Color.TRANSPARENT;
     private final int COLOR_ACTIVE_ICON = Color.WHITE;
     private final int COLOR_INACTIVE_ICON = Color.parseColor("#4A5568");
+    private final Fragment homeFragment = new HomeFragment();
+    private final Fragment newPathFragment = new NewPathFragment();
+    private final Fragment mapFragment = new MapFragment();
+    private final Fragment galleryFragment = new GalleryFragment();
+    private final Fragment profileFragment = new ProfileFragment();
+    private final FragmentManager fm = getSupportFragmentManager();
+    private Fragment activeFragment = homeFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,15 +49,20 @@ public class MainActivity extends AppCompatActivity {
         };
 
         if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
+            fm.beginTransaction().add(R.id.fragmentContainer, profileFragment, "5").hide(profileFragment).commit();
+            fm.beginTransaction().add(R.id.fragmentContainer, galleryFragment, "4").hide(galleryFragment).commit();
+            fm.beginTransaction().add(R.id.fragmentContainer, mapFragment, "2").hide(mapFragment).commit();
+            fm.beginTransaction().add(R.id.fragmentContainer, newPathFragment, "1").hide(newPathFragment).commit();
+            fm.beginTransaction().add(R.id.fragmentContainer, homeFragment, "3").commit();
+
             updateNavUI(2);
         }
 
-        binding.navAdd.setOnClickListener(v -> navigateTo(new NewPathFragment(), 0));
-        binding.navMap.setOnClickListener(v -> navigateTo(new MapFragment(), 1));
-        binding.navHome.setOnClickListener(v -> navigateTo(new HomeFragment(), 2));
-        binding.navGallery.setOnClickListener(v -> updateNavUI(3));
-        binding.navProfile.setOnClickListener(v -> navigateTo(new ProfileFragment(), 4));
+        binding.navAdd.setOnClickListener(v -> navigateTo(newPathFragment, 0));
+        binding.navMap.setOnClickListener(v -> navigateTo(mapFragment, 1));
+        binding.navHome.setOnClickListener(v -> navigateTo(homeFragment, 2));
+        binding.navGallery.setOnClickListener(v -> navigateTo(galleryFragment, 3));
+        binding.navProfile.setOnClickListener(v -> navigateTo(profileFragment, 4));
     }
 
     private void updateNavUI(int selectedIndex) {
@@ -64,15 +77,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainer, fragment)
-                .commit();
-    }
+    public void navigateTo(Fragment targetFragment, int navIndex) {
+        if (activeFragment == targetFragment) return;
 
-    public void navigateTo(Fragment fragment, int navIndex) {
         updateNavUI(navIndex);
-        loadFragment(fragment);
+
+        fm.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .hide(activeFragment)
+                .show(targetFragment)
+                .commit();
+
+        activeFragment = targetFragment;
     }
 }
