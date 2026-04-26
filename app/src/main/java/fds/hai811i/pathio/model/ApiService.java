@@ -25,4 +25,10 @@ public interface ApiService {
     @Multipart
     @PUT("api/profile/avatar/upload")
     Call<ResponseBody> uploadAvatar(@Part MultipartBody.Part avatarFile);
+
+    @POST("api/forgot-password")
+    Call<ResponseBody> forgotPassword(@Body ForgotPasswordRequest body);
+
+    @POST("api/reset-password")
+    Call<ResponseBody> resetPassword(@Body ResetPasswordRequest body);
 }
