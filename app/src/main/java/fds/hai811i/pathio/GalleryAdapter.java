@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -20,9 +21,46 @@ import fds.hai811i.pathio.model.User;
 
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostViewHolder> {
     private List<Post> posts = new ArrayList<>();
-    public void setPosts(List<Post> posts) {
-        this.posts = posts;
-        notifyDataSetChanged();
+    public void setPosts(List<Post> newPosts) {
+        PostDiffCallback diffCallback = new PostDiffCallback(this.posts, newPosts);
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+        this.posts = new ArrayList<>(newPosts);
+
+        diffResult.dispatchUpdatesTo(this);
+    }
+
+    private static class PostDiffCallback extends DiffUtil.Callback {
+        private final List<Post> oldList;
+        private final List<Post> newList;
+
+        public PostDiffCallback(List<Post> oldList, List<Post> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            return (oldList.get(oldItemPosition).getId() == newList.get(newItemPosition).getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            Post oldPost = oldList.get(oldItemPosition);
+            Post newPost = newList.get(newItemPosition);
+
+            return oldPost.getLikesCount() == newPost.getLikesCount() && oldPost.getCaption().equals(newPost.getCaption());
+        }
     }
 
     @NonNull
@@ -69,18 +107,12 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         return posts.size();
     }
 
-    // ==========================================
-    // THE VIEWHOLDER
-    // ==========================================
-    // This inner class acts as a cache for the views in your XML layout
-    // so `findViewById` doesn't get called 1000 times as the user scrolls.
-    static class PostViewHolder extends RecyclerView.ViewHolder {
+    public static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView avatarImage, postImage, btnLike, btnComment;
         TextView username, location, likesCount, caption, timestamp;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Link these to the exact IDs you used in item_gallery_post.xml
             avatarImage = itemView.findViewById(R.id.profile_image);
             username = itemView.findViewById(R.id.txt_post_username);
             location = itemView.findViewById(R.id.txt_post_location);
@@ -89,7 +121,6 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
             caption = itemView.findViewById(R.id.txt_post_caption);
             timestamp = itemView.findViewById(R.id.txt_post_time);
 
-            // Buttons
             btnLike = itemView.findViewById(R.id.btn_like);
             btnComment = itemView.findViewById(R.id.btn_comment);
         }

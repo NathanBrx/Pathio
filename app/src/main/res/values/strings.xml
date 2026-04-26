@@ -52,5 +52,16 @@
     <string name="accountAlreadyExists">Déjà un compte ? Se connecter</string>
     <string name="usernameEmail">Nom d\'utilisateur / Email</string>
     <string name="createAccount">Pas de compte ? Créer un compte</string>
-    <string name="forgottenPassword">Mot de passe oublié</string>
+    <string name="forgottenPassword">Mot de passe oublié ?</string>
+    <string name="sendResetLink">Envoyer le lien</string>
+    <string name="enterEmailWeWillSendReset">Entrez votre adresse e-mail. Nous vous enverrons un lien pour réinitialiser votre mot de passe.</string>
+    <string name="newPost">Nouveau post</string>
+    <string name="tapToUpload">Cliquez pour uploader une image</string>
+    <string name="change">Changer</string>
+    <string name="description">DESCRIPTION</string>
+    <string name="aiTags">Tags générés par IA</string>
+    <string name="generateAiTags">Générer automatiquement des tags à partir de l\'image</string>
+    <string name="audioNotes">Note audio</string>
+    <string name="addAudio">Ajouter un audio</string>
+    <string name="publish">Publier</string>
 </resources>
