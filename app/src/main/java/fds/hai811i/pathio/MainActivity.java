@@ -82,12 +82,32 @@ public class MainActivity extends AppCompatActivity {
 
         updateNavUI(navIndex);
 
-        fm.beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                .hide(activeFragment)
-                .show(targetFragment)
-                .commit();
+        androidx.fragment.app.FragmentTransaction transaction = fm.beginTransaction()
+                .setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.fade_out)
+                .hide(activeFragment);
 
+        if (!targetFragment.isAdded()) {
+            transaction.add(R.id.fragmentContainer, targetFragment);
+        } else {
+            transaction.show(targetFragment);
+        }
+
+        transaction.commit();
         activeFragment = targetFragment;
+    }
+
+    /**
+     * Getter for already loaded fragments. Used in "back_buttons"
+     * @param fragmentClass Class of the fragment to return to
+     * @return The correct loaded fragment
+     * @param <T> One of the fragment classes of the app
+     */
+    public <T extends Fragment> T getExistingFragment(Class<T> fragmentClass) {
+        for (Fragment fragment : fm.getFragments()) {
+            if (fragmentClass.isInstance(fragment)) {
+                return fragmentClass.cast(fragment);
+            }
+        }
+        return null;
     }
 }

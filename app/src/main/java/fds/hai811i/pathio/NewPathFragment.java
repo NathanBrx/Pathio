@@ -87,13 +87,9 @@ public class NewPathFragment extends Fragment {
             updateBudgetText(minVal, maxVal);
         });
 
-        binding.btnGenerateItinerary.setOnClickListener(v -> {
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragmentContainer, new ItineraryListFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
+        binding.btnGenerateItinerary.setOnClickListener(v ->
+                ((MainActivity) requireActivity()).navigateTo(new ItineraryListFragment(), 0)
+        );
     }
 
     /**

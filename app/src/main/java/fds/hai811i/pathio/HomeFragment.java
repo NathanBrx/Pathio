@@ -26,7 +26,22 @@ public class HomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        binding.travelPathCard.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new NewPathFragment(), 0));
+
+        MainActivity mainActivity = (MainActivity) requireActivity();
+
+        binding.travelPathCard.setOnClickListener(v -> {
+            Fragment originalNewPath = mainActivity.getExistingFragment(NewPathFragment.class);
+            if (originalNewPath != null) {
+                mainActivity.navigateTo(originalNewPath, 0);
+            }
+        });
+
+        binding.travelShareCard.setOnClickListener(v -> {
+            Fragment originalGallery = mainActivity.getExistingFragment(GalleryFragment.class);
+            if (originalGallery != null) {
+                mainActivity.navigateTo(originalGallery, 3);
+            }
+        });
     }
 
     @Override

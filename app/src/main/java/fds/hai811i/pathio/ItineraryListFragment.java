@@ -30,6 +30,13 @@ public class ItineraryListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        binding.btnBack.setOnClickListener(v -> {
+            Fragment originalNewPath = ((MainActivity) requireActivity()).getExistingFragment(NewPathFragment.class);
+            if (originalNewPath != null) {
+                ((MainActivity) requireActivity()).navigateTo(originalNewPath, 0);
+            }
+        });
+
         List<Itinerary> myItineraries = new ArrayList<>();
         myItineraries.add(new Itinerary("Économique", "45MIN", "3.2KM", "GRATUIT"));
         myItineraries.add(new Itinerary("Équilibré", "1.5HR", "5.8KM", "30.00"));

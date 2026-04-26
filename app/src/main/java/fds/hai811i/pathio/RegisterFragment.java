@@ -36,9 +36,13 @@ public class RegisterFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        binding.btnBack.setOnClickListener(v ->
-                ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4)
-        );
+        Fragment originalProfile = ((MainActivity) requireActivity()).getExistingFragment(ProfileFragment.class);
+
+        binding.btnBack.setOnClickListener(v -> {
+            if (originalProfile != null) {
+                ((MainActivity) requireActivity()).navigateTo(originalProfile, 4);
+            }
+        });
 
         binding.btnRegister.setOnClickListener(v -> {
             String username = Objects.requireNonNull(binding.inputUsername.getText()).toString().trim();
@@ -63,7 +67,7 @@ public class RegisterFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null) {
 
                         Toast.makeText(getContext(), "Inscrit avec succès !", Toast.LENGTH_SHORT).show();
-                        ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4);
+                        ((MainActivity) requireActivity()).navigateTo(originalProfile, 4);
 
                     } else {
                         Toast.makeText(getContext(), "Erreur lors de l'inscription", Toast.LENGTH_SHORT).show();

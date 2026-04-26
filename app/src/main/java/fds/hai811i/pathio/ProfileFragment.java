@@ -13,6 +13,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
@@ -53,42 +54,47 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        binding.btnLogout.setOnClickListener(v -> logout());
+        binding.btnEditAvatar.setOnClickListener(v -> photoPickerLauncher.launch("image/*"));
+        binding.btnLogin.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new LoginFragment(), 4));
+        binding.btnRegister.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new RegisterFragment(), 4));
+
+        refreshProfileState();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden) {
+            refreshProfileState();
+        }
+    }
+
+    private void refreshProfileState() {
         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         String token = sharedPreferences.getString("jwt_token", null);
 
         if (token != null) {
             binding.loggedState.setText(String.format("%s", "Vous êtes connecté"));
-
             binding.btnLogin.setVisibility(View.GONE);
             binding.btnRegister.setVisibility(View.GONE);
-
             binding.btnLogout.setVisibility(View.VISIBLE);
-            binding.btnLogout.setOnClickListener(v -> logout());
-
             binding.btnEditAvatar.setVisibility(View.VISIBLE);
-            binding.btnEditAvatar.setOnClickListener(v -> {
-                photoPickerLauncher.launch("image/*");
-            });
 
-            // Api call to retrieve user info
+            // api call for user info
             RetrofitClient.getApi(requireContext()).profile().enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<ProfileResponse> call, @NonNull Response<ProfileResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
-
-                        String username = response.body().getUser().getUsername();
-
-                        binding.userId.setText(username);
-
+                        binding.userId.setText(response.body().getUser().getUsername());
                         String avatarUrl = response.body().getUser().getAvatarUrl();
 
                         if (avatarUrl != null) {
                             Glide.with(requireContext())
-                                .load("https://www.zerohour.fr" + avatarUrl)
-                                .circleCrop()
-                                .into(binding.profilePic);
+                                    .load("https://www.zerohour.fr" + avatarUrl)
+                                    .circleCrop()
+                                    .into(binding.profilePic);
                         }
-
                     } else {
                         Toast.makeText(getContext(), "Session expirée, veuillez vous reconnecter", Toast.LENGTH_SHORT).show();
                         logout();
@@ -105,21 +111,11 @@ public class ProfileFragment extends Fragment {
         } else {
             binding.userId.setText(String.format("%s", "Anonymous"));
             binding.loggedState.setText(String.format("%s", "Vous n'êtes pas connecté"));
-
             binding.btnLogin.setVisibility(View.VISIBLE);
             binding.btnRegister.setVisibility(View.VISIBLE);
-
             binding.btnLogout.setVisibility(View.GONE);
             binding.btnEditAvatar.setVisibility(View.GONE);
         }
-
-        binding.btnLogin.setOnClickListener(v ->
-                ((MainActivity) requireActivity()).navigateTo(new LoginFragment(), 4)
-        );
-
-        binding.btnRegister.setOnClickListener(v ->
-                ((MainActivity) requireActivity()).navigateTo(new RegisterFragment(), 4)
-        );
     }
 
     private void uploadAvatarToServer(Uri imageUri) {
@@ -140,7 +136,7 @@ public class ProfileFragment extends Fragment {
                 if (response.isSuccessful()) {
                     Toast.makeText(getContext(), "Avatar mis à jour avec succès !", Toast.LENGTH_SHORT).show();
 
-                    ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4);
+                    refreshProfileState();
                 } else {
                     Toast.makeText(getContext(), "Erreur lors de l'envoi", Toast.LENGTH_SHORT).show();
                 }
@@ -182,12 +178,21 @@ public class ProfileFragment extends Fragment {
         }
     }
     private void logout() {
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-        sharedPreferences.edit().remove("jwt_token").apply();
+        new AlertDialog.Builder(requireContext())
+            .setTitle("Déconnexion")
+            .setMessage("Êtes-vous sûr de vouloir vous déconnecter ?")
+            .setPositiveButton("Oui", (dialog, which) -> {
+                SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                sharedPreferences.edit().remove("jwt_token").apply();
 
-        Toast.makeText(getContext(), "Déconnecté avec succès", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Déconnecté avec succès", Toast.LENGTH_SHORT).show();
 
-        ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4);
+                refreshProfileState();
+            })
+            .setNegativeButton("Non", (dialog, which) -> {
+                dialog.dismiss();
+            })
+            .show();
     }
 
     @Override

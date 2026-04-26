@@ -38,9 +38,15 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        binding.btnBack.setOnClickListener(v ->
-                ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4)
-        );
+        MainActivity mainActivity = (MainActivity) requireActivity();
+
+        Fragment originalProfile = mainActivity.getExistingFragment(ProfileFragment.class);
+
+        binding.btnBack.setOnClickListener(v -> {
+            if (originalProfile != null) {
+                mainActivity.navigateTo(originalProfile, 4);
+            }
+        });
 
         binding.btnLogin.setOnClickListener(v -> {
             String identifier = Objects.requireNonNull(binding.inputUsername.getText()).toString().trim();
@@ -65,7 +71,7 @@ public class LoginFragment extends Fragment {
                         sharedPreferences.edit().putString("jwt_token", token).apply();
 
                         Toast.makeText(getContext(), "Connecté avec succès !", Toast.LENGTH_SHORT).show();
-                        ((MainActivity) requireActivity()).navigateTo(new ProfileFragment(), 4);
+                        mainActivity.navigateTo(originalProfile, 4);
 
                     } else {
                         Toast.makeText(getContext(), "Erreur lors de la connexion", Toast.LENGTH_SHORT).show();
@@ -81,7 +87,11 @@ public class LoginFragment extends Fragment {
         });
 
         binding.linkRegister.setOnClickListener(v ->
-                ((MainActivity) requireActivity()).navigateTo(new RegisterFragment(), 4)
+                mainActivity.navigateTo(new RegisterFragment(), 4)
+        );
+
+        binding.linkForgottenPassword.setOnClickListener(v ->
+                mainActivity.navigateTo(new ForgotPasswordFragment(), 4)
         );
     }
 
