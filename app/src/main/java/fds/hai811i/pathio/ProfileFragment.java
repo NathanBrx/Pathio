@@ -115,6 +115,9 @@ public class ProfileFragment extends Fragment {
             binding.btnRegister.setVisibility(View.VISIBLE);
             binding.btnLogout.setVisibility(View.GONE);
             binding.btnEditAvatar.setVisibility(View.GONE);
+
+            Glide.with(requireContext()).clear(binding.profilePic);
+            binding.profilePic.setImageResource(R.drawable.outline_person_24);
         }
     }
 

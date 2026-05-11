@@ -90,7 +90,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:letterSpacing="0.05"
-            android:text="LOCALISATION"
+            android:text="@string/localisation"
             android:textSize="12sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"

@@ -13,7 +13,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
@@ -26,6 +25,7 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import fds.hai811i.pathio.databinding.FragmentMapBinding;
+import fds.hai811i.pathio.utils.LocationUtils;
 
 public class MapFragment extends Fragment {
     private FragmentMapBinding binding;
@@ -74,9 +74,7 @@ public class MapFragment extends Fragment {
         binding.btnZoomOut.setOnClickListener(v -> mapController.zoomOut());
         binding.btnLocate.setOnClickListener(v -> onLocateClicked());
 
-        boolean hasPermission = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED;
-
-        if (hasPermission) {
+        if (LocationUtils.hasLocationPermission(requireContext())) {
             enableUserLocation();
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
