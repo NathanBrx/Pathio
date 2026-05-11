@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/white">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        app:cardBackgroundColor="#FCE8E3"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:src="@drawable/outline_mic_24"
+            app:tint="#D45D3B" />
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/textRecordingStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/recording"
+        android:textColor="#D45D3B"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelRecord"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="@string/cancel"
+            android:textColor="#718096" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveRecord"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="@string/save"
+            android:textColor="#FFFFFF"
+            app:backgroundTint="#D45D3B"
+            app:cornerRadius="8dp" />
+    </LinearLayout>
+
+</LinearLayout>

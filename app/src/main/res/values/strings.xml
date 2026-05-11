@@ -65,4 +65,8 @@
     <string name="addAudio">Ajouter un audio</string>
     <string name="publish">Publier</string>
     <string name="localisation">LOCALISATION</string>
+    <string name="recording">🔴 Enregistrement de votre voix...</string>
+    <string name="cancel">Annuler</string>
+    <string name="save">Sauvegarder</string>
+    <string name="playVoice">Écoutez votre note vocale</string>
 </resources>

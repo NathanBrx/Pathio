@@ -1,6 +1,8 @@
 package fds.hai811i.pathio;
 
 import android.Manifest;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
@@ -22,6 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import org.json.JSONArray;
@@ -39,14 +43,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import fds.hai811i.pathio.databinding.FragmentNewPostBinding;
-import fds.hai811i.pathio.utils.LocationUtils;
+import fds.hai811i.pathio.utils.*;
 
 public class NewPostFragment extends Fragment {
     private FragmentNewPostBinding binding;
+
+    private AudioRecorderUtils audioRecorder;
+    private AudioPlayerUtils audioPlayer;
+    private boolean isRecording = false;
     private final ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
-                    binding.textTapUpload.setText("Image selected!");
+                    binding.textTapUpload.setText(String.format("%s","Image sélectionnée!"));
                 } else {
                     System.out.println("No media selected");
                 }
@@ -61,7 +69,17 @@ public class NewPostFragment extends Fragment {
                         (coarseLocationGranted != null && coarseLocationGranted)) {
                     fetchCurrentLocation();
                 } else {
-                    binding.location.setText(String.format("%s","Permission denied"));
+                    binding.location.setText(String.format("%s","Permission refusée"));
+                }
+            });
+
+    private final ActivityResultLauncher<String> audioPermissionRequest =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    showRecordingDialog();
+                } else {
+                    binding.switchVoice.setChecked(false);
+                    Toast.makeText(getContext(), "Permission micro requise", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -81,6 +99,9 @@ public class NewPostFragment extends Fragment {
         MainActivity mainActivity = (MainActivity) requireActivity();
         Fragment originalGallery = mainActivity.getExistingFragment(GalleryFragment.class);
 
+        audioRecorder = new AudioRecorderUtils();
+        audioPlayer = new AudioPlayerUtils();
+
         binding.uploadArea.setOnClickListener(v -> pickMedia.launch(new PickVisualMediaRequest.Builder()
                 .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                 .build()));
@@ -94,18 +115,55 @@ public class NewPostFragment extends Fragment {
         fetchCurrentLocation();
         binding.locationIconBg.setOnClickListener(v -> fetchCurrentLocation());
         binding.btnChangeLocation.setOnClickListener(v -> showLocationSearchDialog());
+
+        // Voice Switch Logic
+        binding.switchVoice.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                // They turned it ON -> Check permissions and show dialog
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    showRecordingDialog();
+                } else {
+                    audioPermissionRequest.launch(Manifest.permission.RECORD_AUDIO);
+                }
+            } else {
+                // They turned it OFF -> Clean up audio, hide play button
+                if (isRecording) {
+                    audioRecorder.stopRecording();
+                    isRecording = false;
+                }
+                if (audioPlayer.isPlaying()) audioPlayer.stopPlaying();
+
+                binding.subtitleVoice.setText(R.string.addAudio);
+                binding.subtitleVoice.setTextColor(Color.parseColor("#718096"));
+                binding.btnPreviewAudio.setVisibility(View.GONE);
+            }
+        });
+
+        binding.btnPreviewAudio.setOnClickListener(v -> {
+            if (audioPlayer.isPlaying()) {
+                audioPlayer.stopPlaying();
+                resetPlayButtonUI();
+            } else {
+                String path = audioRecorder.getCurrentAudioPath();
+                if (path != null) {
+                    binding.btnPreviewAudio.setText(String.format("%s","Stop"));
+                    binding.btnPreviewAudio.setIconResource(android.R.drawable.ic_media_pause);
+                    audioPlayer.startPlaying(path, this::resetPlayButtonUI);
+                }
+            }
+        });
     }
 
     private void fetchCurrentLocation() {
         if (LocationUtils.hasLocationPermission(requireContext())) {
-            binding.location.setText(String.format("%s","Locating..."));
+            binding.location.setText(String.format("%s","Recherche de localisation..."));
 
             LocationUtils.getLastKnownLocation(requireContext(), location -> {
                 if (location != null) {
                     String readableAddress = LocationUtils.getReadableAddress(requireContext(), location);
                     binding.location.setText(readableAddress);
                 } else {
-                    binding.location.setText(String.format("%s","Location not found, ensure GPS is enabled"));
+                    binding.location.setText(String.format("%s","Localisation inconnue, activez votre GPS"));
                 }
             });
         } else {
@@ -248,9 +306,65 @@ public class NewPostFragment extends Fragment {
         dialog.show();
     }
 
+    private void showRecordingDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_audio_recorder, null);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setCancelable(false) // Force them to use Save or Cancel buttons
+                .create();
+
+        // Start recording immediately when dialog opens
+        String path = audioRecorder.startRecording(requireContext());
+        if (path != null) {
+            isRecording = true;
+        } else {
+            Toast.makeText(getContext(), "Failed to start recorder", Toast.LENGTH_SHORT).show();
+            binding.switchVoice.setChecked(false);
+            return;
+        }
+
+        // Cancel Button
+        dialogView.findViewById(R.id.btnCancelRecord).setOnClickListener(v -> {
+            audioRecorder.stopRecording();
+            isRecording = false;
+            // Setting this to false automatically triggers the else block in our checked listener to clean up the UI
+            binding.switchVoice.setChecked(false);
+            dialog.dismiss();
+        });
+
+        // Save Button
+        dialogView.findViewById(R.id.btnSaveRecord).setOnClickListener(v -> {
+            audioRecorder.stopRecording();
+            isRecording = false;
+
+            // Update the main UI
+            binding.subtitleVoice.setText(String.format("%s","✅ Note vocale sauvegardée"));
+            binding.subtitleVoice.setTextColor(Color.parseColor("#6B5B49"));
+            binding.btnPreviewAudio.setVisibility(View.VISIBLE);
+            resetPlayButtonUI();
+
+            dialog.dismiss();
+        });
+
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+
+    private void resetPlayButtonUI() {
+        if (binding != null) {
+            binding.btnPreviewAudio.setText(R.string.playVoice);
+            binding.btnPreviewAudio.setIconResource(android.R.drawable.ic_media_play);
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (audioPlayer != null) audioPlayer.stopPlaying();
+        if (audioRecorder != null && isRecording) audioRecorder.stopRecording();
         binding = null;
     }
 }
