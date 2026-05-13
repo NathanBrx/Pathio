@@ -5,6 +5,7 @@ import java.util.List;
 import fds.hai811i.pathio.model.requests.*;
 import fds.hai811i.pathio.model.responses.*;
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -31,6 +32,24 @@ public interface ApiService {
 
     @POST("api/reset-password")
     Call<ResponseBody> resetPassword(@Body ResetPasswordRequest body);
-}
 
-\ No newline at end of file
+    @Multipart
+    @POST("api/posts/post")
+    Call<ResponseBody> createPost(
+            @Part("location") RequestBody location,
+            @Part("caption") RequestBody caption,
+            @Part MultipartBody.Part image,
+            @Part MultipartBody.Part audio
+    );
+
+    @POST("api/posts/{postId}/newComment")
+    Call<ResponseBody> addComment(
+            @Path("postId") int postId,
+            @Body CommentRequest body
+    );
+
+    @GET("api/posts/{postId}/comments")
+    Call<CommentsResponse> getComments(
+            @Path("postId") int postId
+    );
+}

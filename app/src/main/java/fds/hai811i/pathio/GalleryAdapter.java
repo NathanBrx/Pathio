@@ -33,6 +33,13 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         this.audioPlayClickListener = listener;
     }
 
+    public interface OnCommentClickListener {
+        void onCommentClick(int postId);
+    }
+    private OnCommentClickListener commentClickListener;
+    public void setOnCommentClickListener(OnCommentClickListener listener) {
+        this.commentClickListener = listener;
+    }
     public void setPosts(List<Post> newPosts) {
         PostDiffCallback diffCallback = new PostDiffCallback(this.posts, newPosts);
         DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);

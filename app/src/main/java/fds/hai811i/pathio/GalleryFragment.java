@@ -55,6 +55,16 @@ public class GalleryFragment extends Fragment {
     }
     private void setupRecyclerView() {
         adapter = new GalleryAdapter();
+        adapter.setOnCommentClickListener(postId -> {
+            CommentsFragment commentsFragment = new CommentsFragment();
+
+            Bundle bundle = new Bundle();
+            bundle.putInt("postId", postId);
+            commentsFragment.setArguments(bundle);
+
+            ((MainActivity) requireActivity()).navigateTo(commentsFragment, 3);
+        });
+
         adapter.setOnAudioPlayClickListener((post, btnPlay, seekBar, txtTime) -> {
             String fullUrl = "https://www.zerohour.fr/" + post.getAudioUrl();
 
