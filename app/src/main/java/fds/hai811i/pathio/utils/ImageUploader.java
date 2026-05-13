@@ -9,6 +9,6 @@ import okhttp3.RequestBody;
 public class ImageUploader {
     public static MultipartBody.Part createAvatarRequest(File imageFile) {
         RequestBody requestFile = RequestBody.create(imageFile, MediaType.parse("image/*"));
-        return MultipartBody.Part.createFormData("avatarFile", imageFile.getName(), requestFile);
+        return MultipartBody.Part.createFormData("avatar", imageFile.getName(), requestFile);
     }
 }

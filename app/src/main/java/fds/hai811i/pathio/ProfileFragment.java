@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,11 +20,10 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 
 import fds.hai811i.pathio.databinding.FragmentProfileBinding;
 import fds.hai811i.pathio.model.responses.ProfileResponse;
+import fds.hai811i.pathio.utils.FileUtils;
 import fds.hai811i.pathio.utils.ImageUploader;
 import fds.hai811i.pathio.utils.RetrofitClient;
 import okhttp3.MultipartBody;
@@ -34,10 +34,12 @@ import retrofit2.Response;
 
 public class ProfileFragment extends Fragment {
     private FragmentProfileBinding binding;
-    private final ActivityResultLauncher<String> photoPickerLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+    private final ActivityResultLauncher<PickVisualMediaRequest> photoPickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
                     uploadAvatarToServer(uri);
+                } else {
+                    Toast.makeText(getContext(), "Aucune image sélectionnée", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -55,7 +57,11 @@ public class ProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         binding.btnLogout.setOnClickListener(v -> logout());
-        binding.btnEditAvatar.setOnClickListener(v -> photoPickerLauncher.launch("image/*"));
+        binding.btnEditAvatar.setOnClickListener(v ->
+                photoPickerLauncher.launch(new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                .build())
+        );
         binding.btnLogin.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new LoginFragment(), 4));
         binding.btnRegister.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new RegisterFragment(), 4));
 
@@ -89,15 +95,19 @@ public class ProfileFragment extends Fragment {
                         binding.userId.setText(response.body().getUser().getUsername());
                         String avatarUrl = response.body().getUser().getAvatarUrl();
 
+                        sharedPreferences.edit().putString("user_avatar", avatarUrl).apply();
+
                         if (avatarUrl != null) {
                             Glide.with(requireContext())
                                     .load("https://www.zerohour.fr" + avatarUrl)
                                     .circleCrop()
+                                    .placeholder(R.drawable.outline_person_24)
+                                    .error(R.drawable.outline_person_24)
                                     .into(binding.profilePic);
                         }
                     } else {
                         Toast.makeText(getContext(), "Session expirée, veuillez vous reconnecter", Toast.LENGTH_SHORT).show();
-                        logout();
+                        logoutSilent();
                     }
                 }
 
@@ -122,7 +132,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void uploadAvatarToServer(Uri imageUri) {
-        File imageFile = getFileFromUri(imageUri);
+        File imageFile = FileUtils.getFileFromUri(requireContext(), imageUri);
         if (imageFile == null) {
             Toast.makeText(getContext(), "Erreur lors de la lecture de l'image", Toast.LENGTH_SHORT).show();
             return;
@@ -152,50 +162,25 @@ public class ProfileFragment extends Fragment {
             }
         });
     }
-
-    /**
-     * Méthode d'aide pour transformer une uri android (quand on sélectionne une photo) en vrai fichier
-     * @param uri L'uri android
-     * @return L'image si réussite, null sinon
-     */
-    private File getFileFromUri(Uri uri) {
-        try {
-            InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
-            File tempFile = File.createTempFile("upload_avatar", ".jpg", requireContext().getCacheDir());
-            FileOutputStream outputStream = new FileOutputStream(tempFile);
-
-            byte[] buffer = new byte[1024];
-            int length;
-            while (true) {
-                assert inputStream != null;
-                if (!((length = inputStream.read(buffer)) > 0)) break;
-                outputStream.write(buffer, 0, length);
-            }
-
-            outputStream.close();
-            inputStream.close();
-            return tempFile;
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return null;
-        }
-    }
     private void logout() {
         new AlertDialog.Builder(requireContext())
             .setTitle("Déconnexion")
             .setMessage("Êtes-vous sûr de vouloir vous déconnecter ?")
             .setPositiveButton("Oui", (dialog, which) -> {
-                SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                sharedPreferences.edit().remove("jwt_token").apply();
-
+                logoutSilent();
                 Toast.makeText(getContext(), "Déconnecté avec succès", Toast.LENGTH_SHORT).show();
-
-                refreshProfileState();
             })
             .setNegativeButton("Non", (dialog, which) -> {
                 dialog.dismiss();
             })
             .show();
+    }
+
+    private void logoutSilent() {
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        sharedPreferences.edit().remove("jwt_token").apply();
+        sharedPreferences.edit().remove("user_avatar").apply();
+        refreshProfileState();
     }
 
     @Override

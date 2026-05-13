@@ -24,7 +24,7 @@ public interface ApiService {
 
     @Multipart
     @PUT("api/profile/avatar/upload")
-    Call<ResponseBody> uploadAvatar(@Part MultipartBody.Part avatarFile);
+    Call<ResponseBody> uploadAvatar(@Part MultipartBody.Part avatar);
 
     @POST("api/forgot-password")
     Call<ResponseBody> forgotPassword(@Body ForgotPasswordRequest body);
@@ -32,3 +32,5 @@ public interface ApiService {
     @POST("api/reset-password")
     Call<ResponseBody> resetPassword(@Body ResetPasswordRequest body);
 }
+
+\ No newline at end of file
