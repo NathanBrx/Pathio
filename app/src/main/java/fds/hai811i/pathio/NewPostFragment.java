@@ -4,7 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
-import android.location.Geocoder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -38,25 +39,30 @@ import java.net.URLEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import fds.hai811i.pathio.databinding.FragmentNewPostBinding;
 import fds.hai811i.pathio.utils.*;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class NewPostFragment extends Fragment {
     private FragmentNewPostBinding binding;
-
     private AudioRecorderUtils audioRecorder;
     private AudioPlayerUtils audioPlayer;
     private boolean isRecording = false;
+    Uri selectedImageUri;
     private final ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
-                    binding.textTapUpload.setText(String.format("%s","Image sélectionnée!"));
-                } else {
-                    System.out.println("No media selected");
+                    selectedImageUri = uri;
+                    binding.textTapUpload.setText(uri.toString());
                 }
             });
 
@@ -152,6 +158,72 @@ public class NewPostFragment extends Fragment {
                 }
             }
         });
+
+        binding.btnPublish.setOnClickListener(v -> {
+            String caption = binding.inputCaption.getText() != null ? binding.inputCaption.getText().toString().trim() : "";
+            String location = binding.location.getText() != null ? binding.location.getText().toString().trim() : "";
+
+            // 2. Gather audio path (only if the switch is ON)
+            String audioPath = binding.switchVoice.isChecked() ? audioRecorder.getCurrentAudioPath() : null;
+
+            // 3. Basic Validation (matches your backend rules)
+            if (selectedImageUri == null && caption.isEmpty()) {
+                Toast.makeText(getContext(), "Veuillez ajouter une image ou une description.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Disable button to prevent spam clicking
+            binding.btnPublish.setEnabled(false);
+            Toast.makeText(getContext(), "Publication en cours...", Toast.LENGTH_SHORT).show();
+
+            // 4. Convert Strings to OkHttp RequestBodies
+            RequestBody captionBody = RequestBody.create(caption, MultipartBody.FORM);
+            RequestBody locationBody = RequestBody.create(location, MultipartBody.FORM);
+
+            // 5. Convert Image to MultipartBody.Part (if it exists)
+            MultipartBody.Part imagePart = null;
+            if (selectedImageUri != null) {
+                File imageFile = FileUtils.getFileFromUri(requireContext(), selectedImageUri);
+                if (imageFile != null) {
+                    RequestBody requestFile = RequestBody.create(imageFile, MediaType.parse("image/*"));
+                    imagePart = MultipartBody.Part.createFormData("image", imageFile.getName(), requestFile);
+                }
+            }
+
+            // 6. Convert Audio to MultipartBody.Part (if it exists)
+            MultipartBody.Part audioPart = null;
+            if (audioPath != null) {
+                File audioFile = new File(audioPath);
+                if (audioFile.exists()) {
+                    RequestBody requestFile = RequestBody.create(audioFile, MediaType.parse("audio/mp4")); // Adjust mime type if your recorder uses a different format
+                    audioPart = MultipartBody.Part.createFormData("audio", audioFile.getName(), requestFile);
+                }
+            }
+
+            RetrofitClient.getApi(requireContext()).createPost(locationBody, captionBody, imagePart, audioPart).enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                    binding.btnPublish.setEnabled(true);
+
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "Post publié avec succès !", Toast.LENGTH_SHORT).show();
+
+                        if (originalGallery != null) {
+                            mainActivity.navigateTo(originalGallery, 3);
+                        }
+                    } else {
+                        Toast.makeText(getContext(), response.message(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                    binding.btnPublish.setEnabled(true);
+                    System.err.println("Post upload failed: " + t.getMessage());
+                    Toast.makeText(getContext(), "Erreur réseau", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
     }
 
     private void fetchCurrentLocation() {
@@ -195,7 +267,6 @@ public class NewPostFragment extends Fragment {
         // Tools for background searching
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
-        Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
 
         // Listen to typing
         inputSearch.addTextChangedListener(new TextWatcher() {

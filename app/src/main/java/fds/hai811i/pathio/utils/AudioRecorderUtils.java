@@ -14,7 +14,7 @@ public class AudioRecorderUtils {
     public AudioRecorderUtils() {}
     public String startRecording(Context context) {
         File cacheDir = context.getCacheDir();
-        File audioFile = new File(cacheDir, "voice_narrative_" + System.currentTimeMillis() + ".m4a");
+        File audioFile = new File(cacheDir, "voice_narrative_" + System.currentTimeMillis() + ".mp4");
         currentAudioPath = audioFile.getAbsolutePath();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -27,6 +27,10 @@ public class AudioRecorderUtils {
             recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+
+            recorder.setAudioEncodingBitRate(32000);
+            recorder.setAudioSamplingRate(16000);
+
             recorder.setOutputFile(currentAudioPath);
 
             recorder.prepare();

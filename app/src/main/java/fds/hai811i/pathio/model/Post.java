@@ -6,6 +6,7 @@ public class Post {
     private String imageUrl;
     private String caption;
     private String timestamp;
+    private String audioUrl;
 
     // infos utiles, pour éviter de transférer trop de données
     private int likesCount;
@@ -26,6 +27,10 @@ public class Post {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public String getAudioUrl() {
+        return audioUrl;
     }
 
     public String getCaption() {

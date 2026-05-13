@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,16 @@ import fds.hai811i.pathio.model.User;
 
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostViewHolder> {
     private List<Post> posts = new ArrayList<>();
+
+    public interface OnAudioPlayClickListener {
+        void onAudioPlayClick(Post post, ImageView btnPlay, SeekBar seekbar, TextView txtTime);
+    }
+    private OnAudioPlayClickListener audioPlayClickListener;
+
+    public void setOnAudioPlayClickListener(OnAudioPlayClickListener listener) {
+        this.audioPlayClickListener = listener;
+    }
+
     public void setPosts(List<Post> newPosts) {
         PostDiffCallback diffCallback = new PostDiffCallback(this.posts, newPosts);
         DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
@@ -100,6 +111,29 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
                 .fallback(R.drawable.outline_person_24) // si pp est null ou url cassée
                 .error(R.drawable.outline_person_24)
                 .into(holder.avatarImage);
+
+        holder.btnComment.setOnClickListener(v -> {
+            if (commentClickListener != null) {
+                commentClickListener.onCommentClick(post.getId());
+            }
+        });
+
+        if (post.getAudioUrl() != null && !post.getAudioUrl().isEmpty()) {
+            holder.layoutAudioPlayer.setVisibility(View.VISIBLE);
+
+            holder.btnPlayAudio.setOnClickListener(v -> {
+                if (audioPlayClickListener != null) {
+                    audioPlayClickListener.onAudioPlayClick(
+                            post,
+                            holder.btnPlayAudio,
+                            holder.seekbarAudio,
+                            holder.audioTime
+                    );
+                }
+            });
+        } else {
+            holder.layoutAudioPlayer.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -108,8 +142,10 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
     }
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
-        ImageView avatarImage, postImage, btnLike, btnComment;
-        TextView username, location, likesCount, caption, timestamp;
+        ImageView avatarImage, postImage, btnLike, btnComment, btnPlayAudio;
+        TextView username, location, likesCount, caption, timestamp, audioTime;
+        View layoutAudioPlayer;
+        SeekBar seekbarAudio;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -123,6 +159,11 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
 
             btnLike = itemView.findViewById(R.id.btn_like);
             btnComment = itemView.findViewById(R.id.btn_comment);
+
+            layoutAudioPlayer = itemView.findViewById(R.id.layout_audio_player);
+            btnPlayAudio = itemView.findViewById(R.id.btn_play_audio);
+            seekbarAudio = itemView.findViewById(R.id.seekbar_audio);
+            audioTime = itemView.findViewById(R.id.txt_audio_time);
         }
     }
 }
