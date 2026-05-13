@@ -19,6 +19,7 @@ import java.util.Locale;
 
 import fds.hai811i.pathio.model.Post;
 import fds.hai811i.pathio.model.User;
+import fds.hai811i.pathio.utils.TimeUtils;
 
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostViewHolder> {
     private List<Post> posts = new ArrayList<>();
@@ -90,7 +91,8 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         holder.location.setText(post.getLocation());
         holder.likesCount.setText(String.format(Locale.getDefault(), "%d %s",post.getLikesCount(), "J'aime"));
         holder.caption.setText(post.getCaption());
-        holder.timestamp.setText(post.getTimestamp());
+        String localTime = TimeUtils.getLocalTime(post.getTimestamp());
+        holder.timestamp.setText(localTime);
 
         // charge l'image principale du post
         Glide.with(holder.itemView.getContext())
