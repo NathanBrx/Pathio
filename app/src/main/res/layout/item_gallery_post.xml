@@ -208,7 +208,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="16dp"
             android:textSize="14sp" />
 
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_go_to_map"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="S'Y RENDRE"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:icon="@drawable/outline_arrow_outward_24"
+            app:iconGravity="textEnd"
+            app:backgroundTint="#F2EEE9"
+            app:iconTint="#B64127"
+            android:textColor="#B64127"
+            app:cornerRadius="12dp" />
+
+        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>

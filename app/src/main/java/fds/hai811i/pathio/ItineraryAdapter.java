@@ -13,11 +13,17 @@ import fds.hai811i.pathio.model.Itinerary;
 
 public class ItineraryAdapter extends RecyclerView.Adapter<ItineraryAdapter.ViewHolder> {
 
+    public interface OnItinerarySelectedListener {
+        void onItinerarySelected(Itinerary itinerary);
+    }
+
     private List<Itinerary> itineraries;
     private int selectedPosition = -1;
+    private OnItinerarySelectedListener listener;
 
-    public ItineraryAdapter(List<Itinerary> itineraries) {
+    public ItineraryAdapter(List<Itinerary> itineraries, OnItinerarySelectedListener listener) {
         this.itineraries = itineraries;
+        this.listener = listener;
     }
 
     @NonNull
@@ -75,6 +81,12 @@ public class ItineraryAdapter extends RecyclerView.Adapter<ItineraryAdapter.View
 
                     notifyItemChanged(previousSelected);
                     notifyItemChanged(selectedPosition);
+                }
+            });
+
+            binding.btnChoisir.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onItinerarySelected(item);
                 }
             });
         }
