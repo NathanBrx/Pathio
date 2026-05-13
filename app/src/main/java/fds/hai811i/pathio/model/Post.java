@@ -1,4 +1,8 @@
 package fds.hai811i.pathio.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Post {
     private int id;
     private User author;
@@ -10,6 +14,18 @@ public class Post {
     // infos utiles, pour éviter de transférer trop de données
     private int likesCount;
     private boolean isLikedByMe;
+    private List<Comment> comments;
+
+    public Post(int id, User author, String location, String imageUrl, String caption, String timestamp, int likesCount) {
+        this.id = id;
+        this.author = author;
+        this.location = location;
+        this.imageUrl = imageUrl;
+        this.caption = caption;
+        this.timestamp = timestamp;
+        this.likesCount = likesCount;
+        this.comments = new ArrayList<>();
+    }
 
     // Getters
     public int getId() {
@@ -39,4 +55,18 @@ public class Post {
     public int getLikesCount() {
         return likesCount;
     }
-}
+
+    public boolean isLikedByMe() {
+        return isLikedByMe;
+    }
+
+    public void setLikedByMe(boolean likedByMe) {
+        isLikedByMe = likedByMe;
+        if (likedByMe) likesCount++;
+        else likesCount--;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+    }

@@ -31,4 +31,26 @@ public interface ApiService {
 
     @POST("api/reset-password")
     Call<ResponseBody> resetPassword(@Body ResetPasswordRequest body);
-}
+
+    // --- TravelShare Extensions ---
+
+    // Groups
+    @GET("api/groups")
+    Call<List<Group>> getGroups();
+
+    @POST("api/groups")
+    Call<Group> createGroup(@Body Group group);
+
+    @POST("api/groups/{id}/join")
+    Call<ResponseBody> joinGroup(@Path("id") int groupId);
+
+    // Interactions
+    @POST("api/posts/{id}/like")
+    Call<ResponseBody> likePost(@Path("id") int postId);
+
+    @DELETE("api/posts/{id}/like")
+    Call<ResponseBody> unlikePost(@Path("id") int postId);
+
+    @POST("api/posts/{id}/comments")
+    Call<Comment> addComment(@Path("id") int postId, @Query("text") String text);
+    }

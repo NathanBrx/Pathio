@@ -19,6 +19,8 @@ import java.util.Locale;
 
 import fds.hai811i.pathio.databinding.FragmentNewPathBinding;
 
+import fds.hai811i.pathio.model.UserPreferences;
+
 public class NewPathFragment extends Fragment {
     private FragmentNewPathBinding binding;
     private final int COLOR_INACTIVE_TEXT = Color.parseColor("#000000");
@@ -87,9 +89,49 @@ public class NewPathFragment extends Fragment {
             updateBudgetText(minVal, maxVal);
         });
 
-        binding.btnGenerateItinerary.setOnClickListener(v ->
-                ((MainActivity) requireActivity()).navigateTo(new ItineraryListFragment(), 0)
-        );
+        binding.btnGenerateItinerary.setOnClickListener(v -> {
+            UserPreferences prefs = collectPreferences();
+            ItineraryListFragment fragment = new ItineraryListFragment();
+            Bundle args = new Bundle();
+            args.putSerializable("preferences", prefs);
+            fragment.setArguments(args);
+            ((MainActivity) requireActivity()).navigateTo(fragment, 0);
+        });
+    }
+
+    private UserPreferences collectPreferences() {
+        UserPreferences prefs = new UserPreferences();
+        if (binding.cardCulture.isSelected()) prefs.categories.add("culture");
+        if (binding.cardLoisirs.isSelected()) prefs.categories.add("loisir");
+        if (binding.cardFood.isSelected()) prefs.categories.add("food");
+        if (binding.cardDiscover.isSelected()) prefs.categories.add("discover");
+
+        prefs.minBudget = budget.getValues().get(0);
+        prefs.maxBudget = budget.getValues().get(1);
+
+        if (binding.card2Hours.isSelected()) prefs.durationHours = 2f;
+        else if (binding.cardHalfDay.isSelected()) prefs.durationHours = 4f;
+        else if (binding.cardFullDay.isSelected()) prefs.durationHours = 8f;
+        else {
+            String custom = binding.inputCustomHours.getText().toString();
+            if (!custom.isEmpty()) prefs.durationHours = Float.parseFloat(custom);
+            else prefs.durationHours = 2f; // default
+        }
+
+        if (binding.cardEffortFaible.isSelected()) prefs.effortLevel = 1;
+        else if (binding.cardEffortModere.isSelected()) prefs.effortLevel = 2;
+        else if (binding.cardEffortEleve.isSelected()) prefs.effortLevel = 3;
+        else prefs.effortLevel = 2;
+
+        prefs.adaptedForOld = binding.cardOldPeople.isSelected();
+        prefs.adaptedForChildren = binding.cardEnfant.isSelected();
+        prefs.adaptedForPMR = binding.cardPMAPMR.isSelected();
+        prefs.sensitiveToCold = binding.cardFroid.isSelected();
+        prefs.sensitiveToHeat = binding.cardChaud.isSelected();
+        prefs.sensitiveToHumidity = binding.cardWater.isSelected();
+        prefs.specificRequests = binding.inputSpecificRequests.getText().toString();
+
+        return prefs;
     }
 
     /**

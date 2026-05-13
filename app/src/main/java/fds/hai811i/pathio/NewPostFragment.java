@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -51,9 +52,13 @@ public class NewPostFragment extends Fragment {
     private AudioRecorderUtils audioRecorder;
     private AudioPlayerUtils audioPlayer;
     private boolean isRecording = false;
+    
+    private Uri selectedImageUri;
+
     private final ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
+                    selectedImageUri = uri;
                     binding.textTapUpload.setText(String.format("%s","Image sélectionnée!"));
                 } else {
                     System.out.println("No media selected");
@@ -152,6 +157,36 @@ public class NewPostFragment extends Fragment {
                 }
             }
         });
+
+        binding.btnPublish.setOnClickListener(v -> handlePublish());
+    }
+
+    private void handlePublish() {
+        String caption = binding.inputCaption.getText().toString().trim();
+        String location = binding.location.getText().toString().trim();
+        String imageUriString = (selectedImageUri != null) ? selectedImageUri.toString() : null;
+
+        if (caption.isEmpty()) {
+            Toast.makeText(getContext(), "Veuillez ajouter une description", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Logic to send to API
+        binding.btnPublish.setEnabled(false);
+        binding.btnPublish.setText("Publication...");
+
+        // Save to local repository for testing
+        LocalRepository.getInstance().addPost(caption, location, imageUriString);
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            Toast.makeText(getContext(), "Post publié avec succès !", Toast.LENGTH_LONG).show();
+            
+            MainActivity mainActivity = (MainActivity) requireActivity();
+            Fragment originalGallery = mainActivity.getExistingFragment(GalleryFragment.class);
+            if (originalGallery != null) {
+                mainActivity.navigateTo(originalGallery, 3);
+            }
+        }, 1500);
     }
 
     private void fetchCurrentLocation() {

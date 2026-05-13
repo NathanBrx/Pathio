@@ -6,6 +6,12 @@ public class User {
     private String username;
     private String avatarUrl;
 
+    public User(int id, String username, String avatarUrl) {
+        this.id = id;
+        this.username = username;
+        this.avatarUrl = avatarUrl;
+    }
+
     // Getters
     public int getId() {
         return id;
