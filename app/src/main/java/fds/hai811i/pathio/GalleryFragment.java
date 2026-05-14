@@ -64,7 +64,7 @@ public class GalleryFragment extends Fragment {
             post.setLikedByMe(!isCurrentlyLiked);
             post.setLikesCount(isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1);
 
-            adapter.notifyItemChanged(position);
+            adapter.notifyItemChanged(position, "LIKE_UPDATE");
 
             // --- APPEL API ---
             RetrofitClient.getApi(requireContext()).toggleLike(post.getId()).enqueue(new Callback<>() {
@@ -157,6 +157,16 @@ public class GalleryFragment extends Fragment {
                     @Override public void onStopTrackingTouch(SeekBar seekBar) {}
                 });
             }
+        });
+
+        adapter.setOnMapClickListener(locationName -> {
+            MapFragment mapFragment = new MapFragment();
+
+            Bundle bundle = new Bundle();
+            bundle.putString("target_location", locationName);
+            mapFragment.setArguments(bundle);
+
+            ((MainActivity) requireActivity()).navigateTo(mapFragment, 1);
         });
 
         binding.recyclerGallery.setLayoutManager(new LinearLayoutManager(requireContext()));

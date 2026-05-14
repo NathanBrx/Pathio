@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,15 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
     private OnCommentClickListener commentClickListener;
     public void setOnCommentClickListener(OnCommentClickListener listener) {
         this.commentClickListener = listener;
+    }
+
+    public interface OnMapClickListener {
+        void onMapClick(String locationName);
+    }
+    private OnMapClickListener mapClickListener;
+
+    public void setOnMapClickListener(OnMapClickListener listener) {
+        this.mapClickListener = listener;
     }
     public void setPosts(List<Post> newPosts) {
         PostDiffCallback diffCallback = new PostDiffCallback(this.posts, newPosts);
@@ -98,6 +108,25 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
     }
 
     @Override
+    public void onBindViewHolder(@NonNull PostViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (!payloads.isEmpty() && payloads.contains("LIKE_UPDATE")) {
+            Post post = posts.get(position);
+
+            holder.likesCount.setText(String.format(Locale.getDefault(), "%d J'aime", post.getLikesCount()));
+
+            if (post.isLikedByMe()) {
+                holder.btnLike.setImageResource(R.drawable.baseline_favorite_24);
+                holder.btnLike.setColorFilter(android.graphics.Color.parseColor("#E91E63"));
+            } else {
+                holder.btnLike.setImageResource(R.drawable.outline_favorite_24);
+                holder.btnLike.clearColorFilter();
+            }
+        } else {
+            super.onBindViewHolder(holder, position, payloads);
+        }
+    }
+
+    @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
         Post post = posts.get(position);
         User author = post.getAuthor();
@@ -130,16 +159,6 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
                 .into(holder.avatarImage);
 
         // --- Like button ---
-        holder.likesCount.setText(String.format(Locale.getDefault(), "%d J'aime", post.getLikesCount()));
-
-        if (post.isLikedByMe()) {
-            holder.btnLike.setImageResource(R.drawable.baseline_favorite_24);
-            holder.btnLike.setColorFilter(Color.parseColor("#E91E63"));
-        } else {
-            holder.btnLike.setImageResource(R.drawable.outline_favorite_24);
-            holder.btnLike.clearColorFilter();
-        }
-
         holder.btnLike.setOnClickListener(v -> {
             if (likeClickListener != null) {
                 int safePosition = holder.getBindingAdapterPosition();
@@ -173,6 +192,19 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         } else {
             holder.layoutAudioPlayer.setVisibility(View.GONE);
         }
+
+        // --- Location button ---
+        if (post.getLocation() == null || post.getLocation().trim().isEmpty()) {
+            holder.btnGoToMap.setVisibility(View.GONE);
+        } else {
+            holder.btnGoToMap.setVisibility(View.VISIBLE);
+
+            holder.btnGoToMap.setOnClickListener(v -> {
+                if (mapClickListener != null) {
+                    mapClickListener.onMapClick(post.getLocation());
+                }
+            });
+        }
     }
 
     @Override
@@ -185,6 +217,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         TextView username, location, likesCount, caption, timestamp, audioTime;
         View layoutAudioPlayer;
         SeekBar seekbarAudio;
+        MaterialButton btnGoToMap;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -198,6 +231,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
 
             btnLike = itemView.findViewById(R.id.btn_like);
             btnComment = itemView.findViewById(R.id.btn_comment);
+            btnGoToMap = itemView.findViewById(R.id.btn_go_to_map);
 
             layoutAudioPlayer = itemView.findViewById(R.id.layout_audio_player);
             btnPlayAudio = itemView.findViewById(R.id.btn_play_audio);
