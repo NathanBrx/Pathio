@@ -1,5 +1,6 @@
 package fds.hai811i.pathio;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,9 +29,16 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         void onAudioPlayClick(Post post, ImageView btnPlay, SeekBar seekbar, TextView txtTime);
     }
     private OnAudioPlayClickListener audioPlayClickListener;
-
     public void setOnAudioPlayClickListener(OnAudioPlayClickListener listener) {
         this.audioPlayClickListener = listener;
+    }
+
+    public interface OnLikeClickListener {
+        void onLikeClick(Post post, int position);
+    }
+    private OnLikeClickListener likeClickListener;
+    public void setOnLikeClickListener(OnLikeClickListener listener) {
+        this.likeClickListener = listener;
     }
 
     public interface OnCommentClickListener {
@@ -101,7 +109,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         String localTime = TimeUtils.getLocalTime(post.getTimestamp());
         holder.timestamp.setText(localTime);
 
-        // charge l'image principale du post
+        // --- Main picture ---
         Glide.with(holder.itemView.getContext())
                 .load("https://www.zerohour.fr/" + post.getImageUrl())
                 .centerCrop()
@@ -110,7 +118,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
                 .error(R.drawable.pathio_logo)
                 .into(holder.postImage);
 
-        // charge la pp de l'auteur
+        // --- Profile picture ---
         holder.username.setText(author.getUsername());
 
         Glide.with(holder.itemView.getContext())
@@ -121,12 +129,34 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
                 .error(R.drawable.outline_person_24)
                 .into(holder.avatarImage);
 
+        // --- Like button ---
+        holder.likesCount.setText(String.format(Locale.getDefault(), "%d J'aime", post.getLikesCount()));
+
+        if (post.isLikedByMe()) {
+            holder.btnLike.setImageResource(R.drawable.baseline_favorite_24);
+            holder.btnLike.setColorFilter(Color.parseColor("#E91E63"));
+        } else {
+            holder.btnLike.setImageResource(R.drawable.outline_favorite_24);
+            holder.btnLike.clearColorFilter();
+        }
+
+        holder.btnLike.setOnClickListener(v -> {
+            if (likeClickListener != null) {
+                int safePosition = holder.getBindingAdapterPosition();
+                if (safePosition != RecyclerView.NO_POSITION) {
+                    likeClickListener.onLikeClick(post, safePosition);
+                }
+            }
+        });
+
+        // --- Comment button ---
         holder.btnComment.setOnClickListener(v -> {
             if (commentClickListener != null) {
                 commentClickListener.onCommentClick(post.getId());
             }
         });
 
+        // --- Audio playback ---
         if (post.getAudioUrl() != null && !post.getAudioUrl().isEmpty()) {
             holder.layoutAudioPlayer.setVisibility(View.VISIBLE);
 

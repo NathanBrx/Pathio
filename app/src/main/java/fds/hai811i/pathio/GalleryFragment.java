@@ -21,6 +21,7 @@ import fds.hai811i.pathio.databinding.FragmentGalleryBinding;
 import fds.hai811i.pathio.model.Post;
 import fds.hai811i.pathio.utils.AudioPlayerUtils;
 import fds.hai811i.pathio.utils.RetrofitClient;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -55,6 +56,33 @@ public class GalleryFragment extends Fragment {
     }
     private void setupRecyclerView() {
         adapter = new GalleryAdapter();
+
+        adapter.setOnLikeClickListener((post, position) -> {
+            boolean isCurrentlyLiked = post.isLikedByMe();
+            int currentLikes = post.getLikesCount();
+
+            post.setLikedByMe(!isCurrentlyLiked);
+            post.setLikesCount(isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1);
+
+            adapter.notifyItemChanged(position);
+
+            // --- APPEL API ---
+            RetrofitClient.getApi(requireContext()).toggleLike(post.getId()).enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                    if (!response.isSuccessful()) {
+                        revertLikeState(post, position, isCurrentlyLiked, currentLikes);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                    revertLikeState(post, position, isCurrentlyLiked, currentLikes);
+                    Toast.makeText(getContext(), "Erreur réseau", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
         adapter.setOnCommentClickListener(postId -> {
             CommentsFragment commentsFragment = new CommentsFragment();
 
@@ -160,6 +188,12 @@ public class GalleryFragment extends Fragment {
                 Toast.makeText(getContext(), "Erreur réseau", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void revertLikeState(Post post, int position, boolean originalLikeState, int originalLikesCount) {
+        post.setLikedByMe(originalLikeState);
+        post.setLikesCount(originalLikesCount);
+        adapter.notifyItemChanged(position);
     }
 
     @Override

@@ -52,4 +52,9 @@ public interface ApiService {
     Call<CommentsResponse> getComments(
             @Path("postId") int postId
     );
+
+    @POST("api/posts/{postId}/like")
+    Call<ResponseBody> toggleLike(
+            @Path("postId") int postId
+    );
 }
