@@ -16,16 +16,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.bumptech.glide.Glide;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import fds.hai811i.pathio.databinding.FragmentProfileBinding;
+import fds.hai811i.pathio.model.Group;
 import fds.hai811i.pathio.model.responses.ProfileResponse;
-import fds.hai811i.pathio.utils.FileUtils;
-import fds.hai811i.pathio.utils.ImageUploader;
-import fds.hai811i.pathio.utils.RetrofitClient;
+import fds.hai811i.pathio.utils.*;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -34,6 +36,7 @@ import retrofit2.Response;
 
 public class ProfileFragment extends Fragment {
     private FragmentProfileBinding binding;
+    private GroupAdapter groupAdapter;
     private final ActivityResultLauncher<PickVisualMediaRequest> photoPickerLauncher =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
@@ -65,7 +68,17 @@ public class ProfileFragment extends Fragment {
         binding.btnLogin.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new LoginFragment(), 4));
         binding.btnRegister.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new RegisterFragment(), 4));
 
+        binding.btnCreateGroup.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new NewGroupFragment(), 4));
+
+        setupGroupsRecyclerView();
+
         refreshProfileState();
+    }
+
+    private void setupGroupsRecyclerView() {
+        groupAdapter = new GroupAdapter();
+        binding.recyclerGroups.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerGroups.setAdapter(groupAdapter);
     }
 
     @Override
@@ -86,6 +99,10 @@ public class ProfileFragment extends Fragment {
             binding.btnRegister.setVisibility(View.GONE);
             binding.btnLogout.setVisibility(View.VISIBLE);
             binding.btnEditAvatar.setVisibility(View.VISIBLE);
+
+            binding.titleGroups.setVisibility(View.VISIBLE);
+            binding.btnCreateGroup.setVisibility(View.VISIBLE);
+            binding.recyclerGroups.setVisibility(View.VISIBLE);
 
             // api call for user info
             RetrofitClient.getApi(requireContext()).profile().enqueue(new Callback<>() {
@@ -118,6 +135,7 @@ public class ProfileFragment extends Fragment {
                 }
             });
 
+            fetchGroups();
         } else {
             binding.userId.setText(String.format("%s", "Anonymous"));
             binding.loggedState.setText(String.format("%s", "Vous n'êtes pas connecté"));
@@ -126,9 +144,30 @@ public class ProfileFragment extends Fragment {
             binding.btnLogout.setVisibility(View.GONE);
             binding.btnEditAvatar.setVisibility(View.GONE);
 
+            binding.titleGroups.setVisibility(View.GONE);
+            binding.btnCreateGroup.setVisibility(View.GONE);
+            binding.recyclerGroups.setVisibility(View.GONE);
+            if (groupAdapter != null) groupAdapter.submitList(new ArrayList<>());
+
             Glide.with(requireContext()).clear(binding.profilePic);
             binding.profilePic.setImageResource(R.drawable.outline_person_24);
         }
+    }
+
+    private void fetchGroups() {
+        RetrofitClient.getApi(requireContext()).getGroups().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Group>> call, @NonNull Response<List<Group>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    groupAdapter.submitList(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<Group>> call, @NonNull Throwable t) {
+                System.err.println("Failed to fetch groups: " + t.getMessage());
+            }
+        });
     }
 
     private void uploadAvatarToServer(Uri imageUri) {

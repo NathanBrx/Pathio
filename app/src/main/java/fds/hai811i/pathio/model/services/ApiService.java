@@ -58,4 +58,12 @@ public interface ApiService {
     Call<ResponseBody> toggleLike(
             @Path("postId") int postId
     );
+
+    @GET("api/groups")
+    Call<List<Group>> getGroups();
+
+    @POST("api/groups/newGroup")
+    Call<ResponseBody> createGroup(
+            @Body GroupRequest request
+    );
 }

@@ -142,7 +142,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:text="Mes Groupes"
+            android:text="@string/myGroups"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="#1A202C"
@@ -154,7 +154,7 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+ Créer"
+            android:text="@string/create"
             android:textColor="#B84B25"
             app:layout_constraintTop_toTopOf="@id/titleGroups"
             app:layout_constraintBottom_toBottomOf="@id/titleGroups"
@@ -170,5 +170,5 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-        </ScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

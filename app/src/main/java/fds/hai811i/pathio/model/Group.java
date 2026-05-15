@@ -7,22 +7,31 @@ public class Group implements Serializable {
     private int id;
     private String name;
     private String description;
-    private String creatorName;
+    private int creatorId;
     private int memberCount;
     private List<User> members;
 
-    public Group(int id, String name, String description, String creatorName, int memberCount) {
+    public Group(int id, String name, String description, int creatorId, int memberCount) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.creatorName = creatorName;
+        this.creatorId = creatorId;
         this.memberCount = memberCount;
     }
 
-    // Getters
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public String getCreatorName() { return creatorName; }
-    public int getMemberCount() { return memberCount; }
+    public int getId() {
+        return id;
+    }
+    public String getName() {
+        return name;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public int getCreatorId() {
+        return creatorId;
+    }
+    public int getMemberCount() {
+        return memberCount;
+    }
 }

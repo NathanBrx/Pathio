@@ -71,4 +71,9 @@
     <string name="playVoice">Écoutez votre note vocale</string>
     <string name="comments">Commentaires</string>
     <string name="publishComment">Publier un commentaire...</string>
+    <string name="myGroups">Mes Groupes</string>
+    <string name="create">+ Créer</string>
+    <string name="createGroup">Créer le groupe</string>
+    <string name="groupName">Nom du groupe</string>
+    <string name="newGroup">Nouveau groupe</string>
 </resources>
