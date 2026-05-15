@@ -1,5 +1,8 @@
 package fds.hai811i.pathio;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -33,6 +36,7 @@ public class GalleryFragment extends Fragment {
     private String currentPlayingUrl = null;
     private Handler progressHandler = new Handler(Looper.getMainLooper());
     private Runnable progressRunnable;
+    private MainActivity mainActivity;
 
     public GalleryFragment() {}
 
@@ -48,7 +52,9 @@ public class GalleryFragment extends Fragment {
 
         audioPlayerUtils = new AudioPlayerUtils();
 
-        binding.btnNewPost.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new NewPostFragment(), 3));
+        mainActivity = (MainActivity) requireActivity();
+
+        binding.btnNewPost.setOnClickListener(v -> mainActivity.navigateTo(new NewPostFragment(), 3));
 
         setupRecyclerView();
 
@@ -57,7 +63,18 @@ public class GalleryFragment extends Fragment {
     private void setupRecyclerView() {
         adapter = new GalleryAdapter();
 
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        String token = prefs.getString("jwt_token", null);
+
+        Fragment originalProfile = mainActivity.getExistingFragment(ProfileFragment.class);
+
         adapter.setOnLikeClickListener((post, position) -> {
+            if (token == null) {
+                Toast.makeText(getContext(), "Connectez-vous pour aimer un post !", Toast.LENGTH_SHORT).show();
+                mainActivity.navigateTo(originalProfile, 4);
+                return;
+            }
+
             boolean isCurrentlyLiked = post.isLikedByMe();
             int currentLikes = post.getLikesCount();
 
@@ -84,6 +101,12 @@ public class GalleryFragment extends Fragment {
         });
 
         adapter.setOnCommentClickListener(postId -> {
+            if (token == null) {
+                Toast.makeText(getContext(), "Connectez-vous pour commenter un post !", Toast.LENGTH_SHORT).show();
+                mainActivity.navigateTo(originalProfile, 4);
+                return;
+            }
+
             CommentsFragment commentsFragment = new CommentsFragment();
 
             Bundle bundle = new Bundle();
