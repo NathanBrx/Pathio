@@ -1,7 +1,8 @@
-package fds.hai811i.pathio.model;
+package fds.hai811i.pathio.model.services;
 
 import java.util.List;
 
+import fds.hai811i.pathio.model.*;
 import fds.hai811i.pathio.model.requests.*;
 import fds.hai811i.pathio.model.responses.*;
 import okhttp3.MultipartBody;

@@ -1,4 +1,4 @@
-package fds.hai811i.pathio.model;
+package fds.hai811i.pathio.model.services;
 
 import fds.hai811i.pathio.model.responses.OSRMResponse;
 import retrofit2.Call;

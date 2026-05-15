@@ -1,5 +1,6 @@
-package fds.hai811i.pathio.model;
+package fds.hai811i.pathio.model.services;
 
+import fds.hai811i.pathio.model.responses.OverpassResponse;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;

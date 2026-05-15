@@ -2,12 +2,12 @@ package fds.hai811i.pathio.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import fds.hai811i.pathio.model.Itinerary;
 import fds.hai811i.pathio.model.POI;
 import fds.hai811i.pathio.model.UserPreferences;
+import fds.hai811i.pathio.model.responses.OverpassResponse;
 
 public class ItineraryGenerator {
 
@@ -132,7 +132,7 @@ public class ItineraryGenerator {
         return query.toString();
     }
 
-    public static POI fromOverpass(fds.hai811i.pathio.model.OverpassResponse.Element element) {
+    public static POI fromOverpass(OverpassResponse.Element element) {
         String name = element.tags != null && element.tags.containsKey("name") ? element.tags.get("name") : "Lieu intéressant";
         String category = "discover";
         

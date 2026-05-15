@@ -6,9 +6,11 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-import fds.hai811i.pathio.model.ApiService;
-import fds.hai811i.pathio.model.RoutingService;
+import fds.hai811i.pathio.model.services.ApiService;
+import fds.hai811i.pathio.model.services.RoutingService;
+import fds.hai811i.pathio.model.services.OverpassService;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -17,70 +19,73 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
-    private static Retrofit instance;
-    private static Retrofit routingInstance;
-    private static Retrofit overpassInstance;
+    private static ApiService apiService;
+    private static RoutingService routingService;
+    private static OverpassService overpassService;
+
     private static final String BASE_URL = "https://www.zerohour.fr/";
     private static final String OSRM_URL = "https://router.project-osrm.org/";
     private static final String OVERPASS_URL = "https://overpass-api.de/api/";
 
     public static ApiService getApi(Context context) {
-        if (instance == null) {
+        if (apiService == null) {
 
-            Interceptor authInterceptor = new Interceptor() {
-                @NonNull
-                @Override
-                public Response intercept(@NonNull Chain chain) throws IOException {
-                    Request originalRequest = chain.request();
+            // Intercepteur en Lambda
+            Interceptor authInterceptor = chain -> {
+                Request originalRequest = chain.request();
 
-                    SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                String token = sharedPreferences.getString("jwt_token", null);
 
-                    String token = sharedPreferences.getString("jwt_token", null);
-
-                    // if a token exists, clone the request and attach the Authorization header
-                    if (token != null) {
-                        Request newRequest = originalRequest.newBuilder()
-                                .header("Authorization", "Bearer " + token)
-                                .build();
-                        return chain.proceed(newRequest);
-                    }
-
-                    // no token, normal behaviour
-                    return chain.proceed(originalRequest);
+                // S'il y a un token, on l'ajoute
+                if (token != null) {
+                    Request newRequest = originalRequest.newBuilder()
+                            .header("Authorization", "Bearer " + token)
+                            .build();
+                    return chain.proceed(newRequest);
                 }
+
+                // Sans token (visiteur anonyme)
+                return chain.proceed(originalRequest);
             };
 
-            // add interceptor to custom client
+            // Ajout des timeouts pour gérer les fichiers (images, audio)
             OkHttpClient client = new OkHttpClient.Builder()
                     .addInterceptor(authInterceptor)
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
                     .build();
 
-            // retrofit client building
-            instance = new Retrofit.Builder()
+            Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(client)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
+
+            apiService = retrofit.create(ApiService.class);
         }
-        return instance.create(ApiService.class);
+        return apiService;
     }
 
     public static RoutingService getRoutingApi() {
-        if (routingInstance == null) {
-            routingInstance = new Retrofit.Builder()
+        if (routingService == null) {
+            Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(OSRM_URL)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
+
+            routingService = retrofit.create(RoutingService.class);
         }
-        return routingInstance.create(RoutingService.class);
+        return routingService;
     }
 
-    public static fds.hai811i.pathio.model.OverpassService getOverpassApi() {
-        if (overpassInstance == null) {
+    public static OverpassService getOverpassApi() {
+        if (overpassService == null) {
             OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                    .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
                     .addInterceptor(chain -> {
                         Request request = chain.request().newBuilder()
                                 .header("User-Agent", "PathioAndroidApp/1.0")
@@ -89,12 +94,14 @@ public class RetrofitClient {
                     })
                     .build();
 
-            overpassInstance = new Retrofit.Builder()
+            Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(OVERPASS_URL)
                     .client(client)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
+
+            overpassService = retrofit.create(OverpassService.class);
         }
-        return overpassInstance.create(fds.hai811i.pathio.model.OverpassService.class);
+        return overpassService;
     }
 }

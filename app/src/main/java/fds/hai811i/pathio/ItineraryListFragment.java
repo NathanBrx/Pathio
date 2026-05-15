@@ -18,7 +18,7 @@ import fds.hai811i.pathio.model.UserPreferences;
 import fds.hai811i.pathio.utils.ItineraryGenerator;
 
 import android.widget.Toast;
-import fds.hai811i.pathio.model.OverpassResponse;
+import fds.hai811i.pathio.model.responses.OverpassResponse;
 import fds.hai811i.pathio.model.POI;
 import fds.hai811i.pathio.utils.RetrofitClient;
 import retrofit2.Call;

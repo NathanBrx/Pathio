@@ -1,4 +1,4 @@
-package fds.hai811i.pathio.model;
+package fds.hai811i.pathio.model.responses;
 
 import java.util.List;
 import java.util.Map;
