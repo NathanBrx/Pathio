@@ -1,5 +1,6 @@
 package fds.hai811i.pathio;
 
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,7 +37,19 @@ public class GroupAdapter extends ListAdapter<Group, GroupAdapter.GroupViewHolde
                 : group.getMemberCount() + " membres";
         holder.groupMembers.setText(membersText);
 
-        // TODO plus tard : holder.itemView.setOnClickListener(...) pour ouvrir les détails du groupe
+        holder.itemView.setOnClickListener(v -> {
+            GroupDetailsFragment detailsFragment = new GroupDetailsFragment();
+
+            Bundle bundle = new Bundle();
+            bundle.putInt("group_id", group.getId());
+            bundle.putString("group_name", group.getName());
+            bundle.putString("group_desc", group.getDescription());
+            bundle.putInt("group_member_count", group.getMemberCount());
+            bundle.putBoolean("is_member_me", group.amIMember());
+            detailsFragment.setArguments(bundle);
+
+            ((MainActivity) v.getContext()).navigateTo(detailsFragment, 4);
+        });
     }
 
     public static class GroupViewHolder extends RecyclerView.ViewHolder {

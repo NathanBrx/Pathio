@@ -71,4 +71,14 @@ public interface ApiService {
     Call<ResponseBody> createGroup(
             @Body GroupRequest request
     );
+
+    @POST("api/groups/{groupId}/joinLeave")
+    Call<ResponseBody> joinLeaveGroup(
+            @Path("groupId") int groupId
+    );
+
+    @GET("api/groups/{groupId}/members")
+    Call<List<User>> getGroupMembers(
+            @Path("groupId") int groupId
+    );
 }

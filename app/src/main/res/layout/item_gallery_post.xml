@@ -57,11 +57,12 @@
                 app:layout_constraintStart_toEndOf="@+id/profile_image"
                 app:layout_constraintTop_toBottomOf="@+id/txt_post_username" />
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/btn_more_options"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/outline_more_vert_24"
+                android:background="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

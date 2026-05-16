@@ -76,4 +76,6 @@
     <string name="createGroup">Créer le groupe</string>
     <string name="groupName">Nom du groupe</string>
     <string name="newGroup">Nouveau groupe</string>
+    <string name="joinGroup">Rejoindre le groupe</string>
+    <string name="groupMembers">Membres du groupe</string>
 </resources>
