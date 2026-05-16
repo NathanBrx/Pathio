@@ -59,6 +59,11 @@ public interface ApiService {
             @Path("postId") int postId
     );
 
+    @POST("api/posts/{postId}/report")
+    Call<ResponseBody> reportPost(
+            @Path("postId") int postId
+    );
+
     @GET("api/groups")
     Call<List<Group>> getGroups();
 

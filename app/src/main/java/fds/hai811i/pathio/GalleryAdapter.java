@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
@@ -21,7 +22,12 @@ import java.util.Locale;
 
 import fds.hai811i.pathio.model.Post;
 import fds.hai811i.pathio.model.User;
+import fds.hai811i.pathio.utils.RetrofitClient;
 import fds.hai811i.pathio.utils.TimeUtils;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostViewHolder> {
     private List<Post> posts = new ArrayList<>();
@@ -205,6 +211,43 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
                 }
             });
         }
+
+        // --- More options button ---
+        holder.btnOptions.setOnClickListener(v -> {
+            android.widget.PopupMenu popup = new android.widget.PopupMenu(v.getContext(), v);
+
+            popup.getMenu().add("Signaler ce post");
+
+            popup.setOnMenuItemClickListener(item -> {
+                new androidx.appcompat.app.AlertDialog.Builder(v.getContext())
+                        .setTitle("Signaler le post")
+                        .setMessage("Êtes-vous sûr de vouloir signaler ce contenu aux administrateurs ?")
+                        .setPositiveButton("Oui, signaler", (dialog, which) -> {
+
+                            // Appel API Retrofit
+                            RetrofitClient.getApi(v.getContext()).reportPost(post.getId()).enqueue(new Callback<>() {
+                                @Override
+                                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                                    if (response.isSuccessful()) {
+                                        Toast.makeText(v.getContext(), "Merci, le post a été signalé.", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(v.getContext(), response.message(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                                    Toast.makeText(v.getContext(), "Erreur réseau.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                        })
+                        .setNegativeButton("Annuler", null)
+                        .show();
+                return true;
+            });
+            popup.show();
+        });
     }
 
     @Override
@@ -213,7 +256,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
     }
 
     public static class PostViewHolder extends RecyclerView.ViewHolder {
-        ImageView avatarImage, postImage, btnLike, btnComment, btnPlayAudio;
+        ImageView avatarImage, postImage, btnLike, btnComment, btnPlayAudio, btnOptions;
         TextView username, location, likesCount, caption, timestamp, audioTime;
         View layoutAudioPlayer;
         SeekBar seekbarAudio;
@@ -232,6 +275,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
             btnLike = itemView.findViewById(R.id.btn_like);
             btnComment = itemView.findViewById(R.id.btn_comment);
             btnGoToMap = itemView.findViewById(R.id.btn_go_to_map);
+            btnOptions = itemView.findViewById(R.id.btn_more_options);
 
             layoutAudioPlayer = itemView.findViewById(R.id.layout_audio_player);
             btnPlayAudio = itemView.findViewById(R.id.btn_play_audio);
