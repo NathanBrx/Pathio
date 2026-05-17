@@ -43,14 +43,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import fds.hai811i.pathio.databinding.FragmentNewPostBinding;
+import fds.hai811i.pathio.model.Group;
+import fds.hai811i.pathio.model.repositories.GroupRepository;
+import fds.hai811i.pathio.model.repositories.PostRepository;
 import fds.hai811i.pathio.utils.*;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class NewPostFragment extends Fragment {
     private FragmentNewPostBinding binding;
@@ -58,6 +54,8 @@ public class NewPostFragment extends Fragment {
     private AudioPlayerUtils audioPlayer;
     private boolean isRecording = false;
     Uri selectedImageUri;
+    private List<Group> myGroups = new ArrayList<>();
+    private Integer selectedGroupId = null;
     private final ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
@@ -118,6 +116,9 @@ public class NewPostFragment extends Fragment {
             }
         });
 
+        loadUserGroups();
+        binding.btnChangeDestination.setOnClickListener(v -> showDestinationDialog());
+
         fetchCurrentLocation();
         binding.locationIconBg.setOnClickListener(v -> fetchCurrentLocation());
         binding.btnChangeLocation.setOnClickListener(v -> showLocationSearchDialog());
@@ -162,68 +163,85 @@ public class NewPostFragment extends Fragment {
         binding.btnPublish.setOnClickListener(v -> {
             String caption = binding.inputCaption.getText() != null ? binding.inputCaption.getText().toString().trim() : "";
             String location = binding.location.getText() != null ? binding.location.getText().toString().trim() : "";
-
-            // 2. Gather audio path (only if the switch is ON)
             String audioPath = binding.switchVoice.isChecked() ? audioRecorder.getCurrentAudioPath() : null;
 
-            // 3. Basic Validation (matches your backend rules)
+            // Validation
             if (selectedImageUri == null && caption.isEmpty()) {
                 Toast.makeText(getContext(), "Veuillez ajouter une image ou une description.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Disable button to prevent spam clicking
+            // Disable button and show feedback
             binding.btnPublish.setEnabled(false);
             Toast.makeText(getContext(), "Publication en cours...", Toast.LENGTH_SHORT).show();
 
-            // 4. Convert Strings to OkHttp RequestBodies
-            RequestBody captionBody = RequestBody.create(caption, MultipartBody.FORM);
-            RequestBody locationBody = RequestBody.create(location, MultipartBody.FORM);
+            // Prepare Files, converted by repository
+            File imageFile = selectedImageUri != null ? FileUtils.getFileFromUri(requireContext(), selectedImageUri) : null;
+            File audioFile = audioPath != null ? new File(audioPath) : null;
 
-            // 5. Convert Image to MultipartBody.Part (if it exists)
-            MultipartBody.Part imagePart = null;
-            if (selectedImageUri != null) {
-                File imageFile = FileUtils.getFileFromUri(requireContext(), selectedImageUri);
-                if (imageFile != null) {
-                    RequestBody requestFile = RequestBody.create(imageFile, MediaType.parse("image/*"));
-                    imagePart = MultipartBody.Part.createFormData("image", imageFile.getName(), requestFile);
-                }
-            }
-
-            // 6. Convert Audio to MultipartBody.Part (if it exists)
-            MultipartBody.Part audioPart = null;
-            if (audioPath != null) {
-                File audioFile = new File(audioPath);
-                if (audioFile.exists()) {
-                    RequestBody requestFile = RequestBody.create(audioFile, MediaType.parse("audio/mp4")); // Adjust mime type if your recorder uses a different format
-                    audioPart = MultipartBody.Part.createFormData("audio", audioFile.getName(), requestFile);
-                }
-            }
-
-            RetrofitClient.getApi(requireContext()).createPost(locationBody, captionBody, imagePart, audioPart).enqueue(new Callback<>() {
+            // Repository call
+            PostRepository.createPost(requireContext(), location, caption, imageFile, audioFile, selectedGroupId, new PostRepository.ActionCallback() {
                 @Override
-                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                public void onSuccess(String message) {
                     binding.btnPublish.setEnabled(true);
+                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
 
-                    if (response.isSuccessful()) {
-                        Toast.makeText(getContext(), "Post publié avec succès !", Toast.LENGTH_SHORT).show();
-
-                        if (originalGallery != null) {
-                            mainActivity.navigateTo(originalGallery, 3);
-                        }
-                    } else {
-                        Toast.makeText(getContext(), response.message(), Toast.LENGTH_SHORT).show();
+                    if (originalGallery != null) {
+                        mainActivity.navigateTo(originalGallery, 3);
                     }
                 }
 
                 @Override
-                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                public void onError(String errorMessage) {
                     binding.btnPublish.setEnabled(true);
-                    System.err.println("Post upload failed: " + t.getMessage());
-                    Toast.makeText(getContext(), "Erreur réseau", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Erreur : " + errorMessage, Toast.LENGTH_SHORT).show();
                 }
             });
         });
+    }
+
+    private void loadUserGroups() {
+        GroupRepository.fetchGroups(requireContext(), new GroupRepository.GroupCallback() {
+            @Override
+            public void onSuccess(List<Group> groups) {
+                myGroups.clear();
+                for (Group group : groups) {
+                    if (group.amIMember()) {
+                        myGroups.add(group);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                System.err.println("Erreur de chargement des groupes : " + errorMessage);
+            }
+        });
+    }
+
+    private void showDestinationDialog() {
+        String[] options = new String[myGroups.size() + 1];
+        options[0] = "Mode Public";
+
+        for (int i = 0; i < myGroups.size(); i++) {
+            options[i + 1] = myGroups.get(i).getName();
+        }
+
+        new AlertDialog.Builder(requireContext())
+            .setTitle("Publier dans...")
+            .setItems(options, (dialog, which) -> {
+                if (which == 0) {
+                    selectedGroupId = null;
+                    binding.textDestination.setText(String.format("%s", "Mode Public"));
+                    binding.iconDestination.setImageResource(R.drawable.outline_person_24);
+                } else {
+                    Group selectedGroup = myGroups.get(which - 1);
+                    selectedGroupId = selectedGroup.getId();
+                    binding.textDestination.setText(selectedGroup.getName());
+                    binding.iconDestination.setImageResource(R.drawable.outline_group_24);
+                }
+            })
+            .show();
     }
 
     private void fetchCurrentLocation() {

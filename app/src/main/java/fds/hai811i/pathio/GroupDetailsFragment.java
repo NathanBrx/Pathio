@@ -15,13 +15,10 @@ import java.util.List;
 import java.util.Locale;
 
 import fds.hai811i.pathio.databinding.FragmentGroupDetailsBinding;
-// Assurez-vous d'avoir vos imports Retrofit
+import fds.hai811i.pathio.model.Post;
 import fds.hai811i.pathio.model.User;
-import fds.hai811i.pathio.utils.RetrofitClient;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import fds.hai811i.pathio.model.repositories.GroupRepository;
+import fds.hai811i.pathio.utils.ViewUtils;
 
 public class GroupDetailsFragment extends Fragment {
     private FragmentGroupDetailsBinding binding;
@@ -29,6 +26,8 @@ public class GroupDetailsFragment extends Fragment {
     private ProfileFragment originalProfile;
     private int groupId;
     private MemberAdapter memberAdapter;
+    private GalleryAdapter galleryAdapter;
+    private boolean isMembersTabActive = true;
 
     public GroupDetailsFragment() {}
 
@@ -71,15 +70,34 @@ public class GroupDetailsFragment extends Fragment {
 
         binding.btnJoinLeaveGroup.setOnClickListener(v -> toggleGroupMembership());
 
+        binding.btnTabMembers.setOnClickListener(v -> showMembersTab());
+        binding.btnTabPosts.setOnClickListener(v -> showPhotosTab());
+
         setupRecyclerView();
 
-        fetchGroupMembers();
+        showMembersTab();
     }
 
     private void setupRecyclerView() {
         binding.recyclerGroupContent.setLayoutManager(new LinearLayoutManager(requireContext()));
         memberAdapter = new MemberAdapter();
+        galleryAdapter = new GalleryAdapter();
+    }
+
+    private void showPhotosTab() {
+        isMembersTabActive = false;
+        ViewUtils.switchTabs(binding.btnTabPosts, binding.btnTabMembers);
+
+        binding.recyclerGroupContent.setAdapter(galleryAdapter);
+        fetchPosts();
+    }
+
+    private void showMembersTab() {
+        isMembersTabActive = true;
+        ViewUtils.switchTabs(binding.btnTabMembers, binding.btnTabPosts);
+
         binding.recyclerGroupContent.setAdapter(memberAdapter);
+        fetchGroupMembers();
     }
 
     private void updateUI(boolean amIMember) {
@@ -99,25 +117,21 @@ public class GroupDetailsFragment extends Fragment {
 
         boolean isCurrentlyMember = binding.btnJoinLeaveGroup.getText().toString().toLowerCase().contains("quitter");
 
-        RetrofitClient.getApi(requireContext()).joinLeaveGroup(groupId).enqueue(new Callback<>() {
+        GroupRepository.joinLeaveGroup(requireContext(), groupId, new GroupRepository.ActionCallback() {
             @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+            public void onSuccess(String message) {
                 binding.btnJoinLeaveGroup.setEnabled(true);
 
-                if (response.isSuccessful()) {
-                    boolean newMembershipState = !isCurrentlyMember;
-                    updateUI(newMembershipState);
-                    Toast.makeText(requireContext(), response.message(), Toast.LENGTH_SHORT).show();
-                    fetchGroupMembers();
-                } else {
-                    Toast.makeText(requireContext(), "Impossible de modifier votre statut.", Toast.LENGTH_SHORT).show();
-                }
+                boolean newMembershipState = !isCurrentlyMember;
+                updateUI(newMembershipState);
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                fetchGroupMembers();
             }
 
             @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+            public void onError(String errorMessage) {
                 binding.btnJoinLeaveGroup.setEnabled(true);
-                Toast.makeText(requireContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -129,20 +143,35 @@ public class GroupDetailsFragment extends Fragment {
     }
 
     private void fetchGroupMembers() {
-        RetrofitClient.getApi(requireContext()).getGroupMembers(groupId).enqueue(new Callback<>() {
+        GroupRepository.getGroupMembers(requireContext(), groupId, new GroupRepository.MembersCallback() {
             @Override
-            public void onResponse(@NonNull Call<List<User>> call, @NonNull Response<List<User>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<User> members = response.body();
-                    memberAdapter.submitList(members);
+            public void onSuccess(List<User> members) {
+                memberAdapter.submitList(members);
 
-                    int newCount = members.size();
-                    binding.txtGroupMembersCount.setText(String.format(Locale.getDefault(), "%d%s", newCount, (newCount > 1 ? " membres" : " membre")));
-                }
+                int newCount = members.size();
+                binding.txtGroupMembersCount.setText(String.format(Locale.getDefault(), "%d%s", newCount, (newCount > 1 ? " membres" : " membre")));
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<User>> call, @NonNull Throwable t) {}
+            public void onError(String errorMessage) {}
+        });
+    }
+
+    private void fetchPosts() {
+        binding.recyclerGroupContent.setVisibility(View.GONE);
+
+        GroupRepository.getGroupPosts(requireContext(), groupId, new GroupRepository.GroupPostsCallback() {
+            @Override
+            public void onSuccess(List<Post> posts) {
+                binding.recyclerGroupContent.setVisibility(View.VISIBLE);
+                galleryAdapter.setPosts(posts);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                System.err.println("Failed to fetch posts: " + errorMessage);
+                Toast.makeText(getContext(), "Erreur : " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

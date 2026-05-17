@@ -40,7 +40,8 @@ public interface ApiService {
             @Part("location") RequestBody location,
             @Part("caption") RequestBody caption,
             @Part MultipartBody.Part image,
-            @Part MultipartBody.Part audio
+            @Part MultipartBody.Part audio,
+            @Part("group_id") RequestBody groupId
     );
 
     @POST("api/posts/{postId}/newComment")
@@ -79,6 +80,11 @@ public interface ApiService {
 
     @GET("api/groups/{groupId}/members")
     Call<List<User>> getGroupMembers(
+            @Path("groupId") int groupId
+    );
+
+    @GET("api/groups/{groupId}/posts")
+    Call<List<Post>> getGroupPosts(
             @Path("groupId") int groupId
     );
 }

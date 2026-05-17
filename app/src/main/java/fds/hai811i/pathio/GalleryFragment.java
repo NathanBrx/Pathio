@@ -1,6 +1,5 @@
 package fds.hai811i.pathio;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -21,22 +20,23 @@ import java.util.List;
 import java.util.Locale;
 
 import fds.hai811i.pathio.databinding.FragmentGalleryBinding;
+import fds.hai811i.pathio.model.Group;
 import fds.hai811i.pathio.model.Post;
+import fds.hai811i.pathio.model.repositories.GroupRepository;
+import fds.hai811i.pathio.model.repositories.PostRepository;
 import fds.hai811i.pathio.utils.AudioPlayerUtils;
-import fds.hai811i.pathio.utils.RetrofitClient;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import fds.hai811i.pathio.utils.ViewUtils;
 
 public class GalleryFragment extends Fragment {
     private FragmentGalleryBinding binding;
-    private GalleryAdapter adapter;
+    private GalleryAdapter galleryAdapter;
+    private GroupAdapter groupAdapter;
     private AudioPlayerUtils audioPlayerUtils;
     private String currentPlayingUrl = null;
     private Handler progressHandler = new Handler(Looper.getMainLooper());
     private Runnable progressRunnable;
     private MainActivity mainActivity;
+    private boolean isPhotosTabActive = true;
 
     public GalleryFragment() {}
 
@@ -55,20 +55,23 @@ public class GalleryFragment extends Fragment {
         mainActivity = (MainActivity) requireActivity();
 
         binding.btnNewPost.setOnClickListener(v -> mainActivity.navigateTo(new NewPostFragment(), 3));
+        binding.btnFilterPhotos.setOnClickListener(v -> showPhotosTab());
+        binding.btnFilterGroups.setOnClickListener(v -> showGroupsTab());
 
         setupRecyclerView();
 
-        fetchPosts();
+        showPhotosTab();
     }
     private void setupRecyclerView() {
-        adapter = new GalleryAdapter();
+        galleryAdapter = new GalleryAdapter();
+        groupAdapter = new GroupAdapter();
 
         SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         String token = prefs.getString("jwt_token", null);
 
         Fragment originalProfile = mainActivity.getExistingFragment(ProfileFragment.class);
 
-        adapter.setOnLikeClickListener((post, position) -> {
+        galleryAdapter.setOnLikeClickListener((post, position) -> {
             if (token == null) {
                 Toast.makeText(getContext(), "Connectez-vous pour aimer un post !", Toast.LENGTH_SHORT).show();
                 mainActivity.navigateTo(originalProfile, 4);
@@ -80,27 +83,21 @@ public class GalleryFragment extends Fragment {
 
             post.setLikedByMe(!isCurrentlyLiked);
             post.setLikesCount(isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1);
+            galleryAdapter.notifyItemChanged(position, "LIKE_UPDATE");
 
-            adapter.notifyItemChanged(position, "LIKE_UPDATE");
-
-            // --- APPEL API ---
-            RetrofitClient.getApi(requireContext()).toggleLike(post.getId()).enqueue(new Callback<>() {
+            PostRepository.toggleLike(requireContext(), post.getId(), new PostRepository.ActionCallback() {
                 @Override
-                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                    if (!response.isSuccessful()) {
-                        revertLikeState(post, position, isCurrentlyLiked, currentLikes);
-                    }
-                }
+                public void onSuccess(String message) {}
 
                 @Override
-                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                public void onError(String errorMessage) {
                     revertLikeState(post, position, isCurrentlyLiked, currentLikes);
-                    Toast.makeText(getContext(), "Erreur réseau", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Erreur réseau : " + errorMessage, Toast.LENGTH_SHORT).show();
                 }
             });
         });
 
-        adapter.setOnCommentClickListener(postId -> {
+        galleryAdapter.setOnCommentClickListener(postId -> {
             if (token == null) {
                 Toast.makeText(getContext(), "Connectez-vous pour commenter un post !", Toast.LENGTH_SHORT).show();
                 mainActivity.navigateTo(originalProfile, 4);
@@ -116,7 +113,7 @@ public class GalleryFragment extends Fragment {
             ((MainActivity) requireActivity()).navigateTo(commentsFragment, 3);
         });
 
-        adapter.setOnAudioPlayClickListener((post, btnPlay, seekBar, txtTime) -> {
+        galleryAdapter.setOnAudioPlayClickListener((post, btnPlay, seekBar, txtTime) -> {
             String fullUrl = "https://www.zerohour.fr/" + post.getAudioUrl();
 
             // PAUSE
@@ -182,7 +179,7 @@ public class GalleryFragment extends Fragment {
             }
         });
 
-        adapter.setOnMapClickListener(locationName -> {
+        galleryAdapter.setOnMapClickListener(locationName -> {
             MapFragment mapFragment = new MapFragment();
 
             Bundle bundle = new Bundle();
@@ -193,32 +190,65 @@ public class GalleryFragment extends Fragment {
         });
 
         binding.recyclerGallery.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.recyclerGallery.setAdapter(adapter);
+    }
+
+    private void showPhotosTab() {
+        isPhotosTabActive = true;
+        ViewUtils.switchTabs(binding.btnFilterPhotos, binding.btnFilterGroups);
+
+        binding.recyclerGallery.setAdapter(galleryAdapter);
+        fetchPosts();
+    }
+
+    private void showGroupsTab() {
+        isPhotosTabActive = false;
+        ViewUtils.switchTabs(binding.btnFilterGroups, binding.btnFilterPhotos);
+
+        binding.recyclerGallery.setAdapter(groupAdapter);
+        fetchGroups();
     }
 
     private void fetchPosts() {
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.recyclerGallery.setVisibility(View.GONE);
 
-        // appel api pour récupérer les posts
-        RetrofitClient.getApi(requireContext()).getPosts().enqueue(new Callback<>() {
+        PostRepository.getPosts(requireContext(), new PostRepository.PostsCallback() {
             @Override
-            public void onResponse(@NonNull Call<List<Post>> call, @NonNull Response<List<Post>> response) {
+            public void onSuccess(List<Post> posts) {
                 binding.progressBar.setVisibility(View.GONE);
+                binding.recyclerGallery.setVisibility(View.VISIBLE);
 
-                if (response.isSuccessful() && response.body() != null) {
-                    binding.recyclerGallery.setVisibility(View.VISIBLE);
-                    adapter.setPosts(response.body());
-                } else {
-                    Toast.makeText(getContext(), "Erreur de chargement du flux", Toast.LENGTH_SHORT).show();
-                }
+                galleryAdapter.setPosts(posts);
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<Post>> call, @NonNull Throwable t) {
+            public void onError(String errorMessage) {
                 binding.progressBar.setVisibility(View.GONE);
-                System.err.println("Failed to fetch posts: " + t.getMessage());
-                Toast.makeText(getContext(), "Erreur réseau", Toast.LENGTH_SHORT).show();
+
+                System.err.println("Failed to fetch posts: " + errorMessage);
+                Toast.makeText(getContext(), "Erreur : " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void fetchGroups() {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.recyclerGallery.setVisibility(View.GONE);
+
+        GroupRepository.fetchGroups(requireContext(), new GroupRepository.GroupCallback() {
+            @Override
+            public void onSuccess(List<Group> groups) {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.recyclerGallery.setVisibility(View.VISIBLE);
+
+                groupAdapter.submitList(groups);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                binding.progressBar.setVisibility(View.GONE);
+                System.err.println("Failed to fetch groups: " + errorMessage);
+                Toast.makeText(getContext(), "Erreur réseau: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -226,14 +256,18 @@ public class GalleryFragment extends Fragment {
     private void revertLikeState(Post post, int position, boolean originalLikeState, int originalLikesCount) {
         post.setLikedByMe(originalLikeState);
         post.setLikesCount(originalLikesCount);
-        adapter.notifyItemChanged(position);
+        galleryAdapter.notifyItemChanged(position);
     }
 
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (!hidden) {
-            fetchPosts();
+            if (isPhotosTabActive) {
+                fetchPosts();
+            } else {
+                fetchGroups();
+            }
         } else {
             if (audioPlayerUtils != null) {
                 audioPlayerUtils.stopPlaying();

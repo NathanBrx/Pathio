@@ -1,16 +1,11 @@
 package fds.hai811i.pathio.model;
 
-import com.google.gson.annotations.SerializedName;
-
 public class Group {
     private int id;
     private String name;
     private String description;
-    @SerializedName("creator_id")
     private int creatorId;
-    @SerializedName("member_count")
     private int memberCount;
-    @SerializedName("is_member_me")
     private boolean isMemberMe;
 
     public Group(int id, String name, String description, int creatorId, int memberCount, boolean isMemberMe) {

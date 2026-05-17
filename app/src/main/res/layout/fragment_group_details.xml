@@ -92,20 +92,45 @@
                 android:layout_marginVertical="24dp"
                 android:background="#E2E8F0" />
 
-            <TextView
-                android:id="@+id/txtSectionTitle"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/groupMembers"
-                android:textColor="#1A202C"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTabPosts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:text="@string/posts"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    app:backgroundTint="#B84B25"
+                    app:cornerRadius="20dp"
+                    android:minHeight="40dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTabMembers"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/groupMembers"
+                    android:textAllCaps="false"
+                    android:textColor="#111827"
+                    android:textSize="13sp"
+                    app:strokeColor="#BCBCBC"
+                    app:cornerRadius="20dp"
+                    android:minHeight="40dp"/>
+            </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerGroupContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false" /> </LinearLayout>
+                android:nestedScrollingEnabled="false" />
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

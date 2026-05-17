@@ -8,12 +8,13 @@ public class Post {
     private String caption;
     private String timestamp;
     private String audioUrl;
+    private Integer groupId;
 
     // infos utiles, pour éviter de transférer trop de données
     private int likesCount;
     private boolean isLikedByMe;
 
-    public Post(int id, User author, String location, String imageUrl, String caption, String timestamp, int likesCount) {
+    public Post(int id, User author, String location, String imageUrl, String caption, String timestamp, int likesCount, Integer groupId) {
         this.id = id;
         this.author = author;
         this.location = location;
@@ -21,6 +22,7 @@ public class Post {
         this.caption = caption;
         this.timestamp = timestamp;
         this.likesCount = likesCount;
+        this.groupId = groupId;
     }
 
     // Getters
@@ -58,6 +60,10 @@ public class Post {
 
     public boolean isLikedByMe() {
         return isLikedByMe;
+    }
+
+    public Integer getGroupId() {
+        return groupId;
     }
 
     public void setLikedByMe(boolean likedByMe) {

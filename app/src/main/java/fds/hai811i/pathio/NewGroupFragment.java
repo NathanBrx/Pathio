@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import fds.hai811i.pathio.databinding.FragmentNewGroupBinding;
+import fds.hai811i.pathio.model.repositories.GroupRepository;
 import fds.hai811i.pathio.model.requests.GroupRequest;
 import fds.hai811i.pathio.utils.RetrofitClient;
 import okhttp3.ResponseBody;
@@ -63,29 +64,25 @@ public class NewGroupFragment extends Fragment {
         binding.btnSubmitGroup.setEnabled(false);
         binding.btnSubmitGroup.setText(String.format("%s","Création en cours..."));
 
-        GroupRequest request = new GroupRequest(name, description);
-
-        RetrofitClient.getApi(requireContext()).createGroup(request).enqueue(new Callback<>() {
+        GroupRepository.createGroup(requireContext(), name, description, new GroupRepository.ActionCallback() {
             @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+            public void onSuccess(String message) {
                 binding.btnSubmitGroup.setEnabled(true);
                 binding.btnSubmitGroup.setText(R.string.createGroup);
 
-                if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "Groupe créé avec succès !", Toast.LENGTH_SHORT).show();
-                    if (originalProfile != null) {
-                        mainActivity.navigateTo(originalProfile, 4);
-                    }
-                } else {
-                    Toast.makeText(getContext(), response.message(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+
+                if (originalProfile != null) {
+                    mainActivity.navigateTo(originalProfile, 4);
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+            public void onError(String errorMessage) {
                 binding.btnSubmitGroup.setEnabled(true);
                 binding.btnSubmitGroup.setText(R.string.createGroup);
-                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
             }
         });
     }

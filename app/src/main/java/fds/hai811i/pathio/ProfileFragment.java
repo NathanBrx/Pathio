@@ -26,6 +26,7 @@ import java.util.List;
 
 import fds.hai811i.pathio.databinding.FragmentProfileBinding;
 import fds.hai811i.pathio.model.Group;
+import fds.hai811i.pathio.model.repositories.GroupRepository;
 import fds.hai811i.pathio.model.responses.ProfileResponse;
 import fds.hai811i.pathio.utils.*;
 import okhttp3.MultipartBody;
@@ -155,17 +156,23 @@ public class ProfileFragment extends Fragment {
     }
 
     private void fetchGroups() {
-        RetrofitClient.getApi(requireContext()).getGroups().enqueue(new Callback<>() {
+        GroupRepository.fetchGroups(requireContext(), new GroupRepository.GroupCallback() {
             @Override
-            public void onResponse(@NonNull Call<List<Group>> call, @NonNull Response<List<Group>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    groupAdapter.submitList(response.body());
+            public void onSuccess(List<Group> groups) {
+                List<Group> myGroups = new ArrayList<>();
+
+                for (Group group : groups) {
+                    if (group.amIMember()) {
+                        myGroups.add(group);
+                    }
                 }
+
+                groupAdapter.submitList(myGroups);
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<Group>> call, @NonNull Throwable t) {
-                System.err.println("Failed to fetch groups: " + t.getMessage());
+            public void onError(String errorMessage) {
+                System.err.println("Failed to fetch groups: " + errorMessage);
             }
         });
     }
