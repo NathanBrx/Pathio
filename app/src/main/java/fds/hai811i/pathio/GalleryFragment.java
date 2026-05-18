@@ -116,8 +116,6 @@ public class GalleryFragment extends Fragment {
             ((MainActivity) requireActivity()).navigateTo(commentsFragment, 3);
         });
 
-        // ... Le reste de votre code (AudioPlayClickListener, MapClickListener) reste exactement le même ...
-
         galleryAdapter.setOnAudioPlayClickListener((post, btnPlay, seekBar, txtTime) -> {
             String fullUrl = "https://www.zerohour.fr/" + post.getAudioUrl();
 
@@ -185,13 +183,13 @@ public class GalleryFragment extends Fragment {
         });
 
         galleryAdapter.setOnMapClickListener(locationName -> {
-            MapFragment mapFragment = new MapFragment();
+            MainActivity mainActivity = (MainActivity) requireActivity();
+            MapFragment mapFragment = mainActivity.getExistingFragment(MapFragment.class);
 
-            Bundle bundle = new Bundle();
-            bundle.putString("target_location", locationName);
-            mapFragment.setArguments(bundle);
-
-            ((MainActivity) requireActivity()).navigateTo(mapFragment, 1);
+            if (mapFragment != null) {
+                mapFragment.setTargetLocationAndDisplay(locationName);
+                mainActivity.navigateTo(mapFragment, 1);
+            }
         });
 
         binding.recyclerGallery.setLayoutManager(new LinearLayoutManager(requireContext()));

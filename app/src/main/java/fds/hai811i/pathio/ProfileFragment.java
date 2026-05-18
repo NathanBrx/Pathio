@@ -26,6 +26,7 @@ import java.util.List;
 
 import fds.hai811i.pathio.databinding.FragmentProfileBinding;
 import fds.hai811i.pathio.model.Group;
+import fds.hai811i.pathio.model.Itinerary;
 import fds.hai811i.pathio.model.repositories.GroupRepository;
 import fds.hai811i.pathio.model.responses.ProfileResponse;
 import fds.hai811i.pathio.utils.*;
@@ -38,6 +39,7 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
     private FragmentProfileBinding binding;
     private GroupAdapter groupAdapter;
+    private SmallItineraryAdapter smallItineraryAdapter;
     private final ActivityResultLauncher<PickVisualMediaRequest> photoPickerLauncher =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
@@ -72,6 +74,7 @@ public class ProfileFragment extends Fragment {
         binding.btnCreateGroup.setOnClickListener(v -> ((MainActivity) requireActivity()).navigateTo(new NewGroupFragment(), 4));
 
         setupGroupsRecyclerView();
+        setupSmallItinerariesRecyclerView();
 
         refreshProfileState();
     }
@@ -80,6 +83,22 @@ public class ProfileFragment extends Fragment {
         groupAdapter = new GroupAdapter();
         binding.recyclerGroups.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerGroups.setAdapter(groupAdapter);
+    }
+
+    private void setupSmallItinerariesRecyclerView() {
+        smallItineraryAdapter = new SmallItineraryAdapter();
+        binding.recyclerItineraries.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerItineraries.setAdapter(smallItineraryAdapter);
+
+        smallItineraryAdapter.setOnItemClickListener(itinerary -> {
+            MainActivity mainActivity = (MainActivity) requireActivity();
+            MapFragment mapFragment = mainActivity.getExistingFragment(MapFragment.class);
+
+            if (mapFragment != null) {
+                mapFragment.setItineraryAndDisplay(itinerary);
+                mainActivity.navigateTo(mapFragment, 1);
+            }
+        });
     }
 
     @Override
@@ -106,6 +125,9 @@ public class ProfileFragment extends Fragment {
             binding.titleGroups.setVisibility(View.VISIBLE);
             binding.btnCreateGroup.setVisibility(View.VISIBLE);
             binding.recyclerGroups.setVisibility(View.VISIBLE);
+
+            binding.titleItineraries.setVisibility(View.VISIBLE);
+            binding.recyclerItineraries.setVisibility(View.VISIBLE);
 
             // api call for user info
             RetrofitClient.getApi(requireContext()).profile().enqueue(new Callback<>() {
@@ -139,6 +161,7 @@ public class ProfileFragment extends Fragment {
             });
 
             fetchGroups();
+            fetchItineraries();
         } else {
             binding.userId.setText(String.format("%s", "Anonymous"));
             binding.loggedState.setText(String.format("%s", "Vous n'êtes pas connecté"));
@@ -151,6 +174,10 @@ public class ProfileFragment extends Fragment {
             binding.btnCreateGroup.setVisibility(View.GONE);
             binding.recyclerGroups.setVisibility(View.GONE);
             if (groupAdapter != null) groupAdapter.submitList(new ArrayList<>());
+
+            binding.titleItineraries.setVisibility(View.GONE);
+            binding.recyclerItineraries.setVisibility(View.GONE);
+            if (smallItineraryAdapter != null) smallItineraryAdapter.setItineraries(new ArrayList<>());
 
             Glide.with(requireContext()).clear(binding.profilePic);
             binding.profilePic.setImageResource(R.drawable.outline_person_24);
@@ -175,6 +202,22 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onError(String errorMessage) {
                 System.err.println("Failed to fetch groups: " + errorMessage);
+            }
+        });
+    }
+
+    private void fetchItineraries() {
+        RetrofitClient.getApi(requireContext()).getSavedItineraries().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Itinerary>> call, @NonNull Response<List<Itinerary>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    smallItineraryAdapter.setItineraries(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<Itinerary>> call, @NonNull Throwable t) {
+                System.err.println("Failed to fetch itineraries: " + t.getMessage());
             }
         });
     }

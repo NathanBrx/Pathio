@@ -92,4 +92,12 @@ public interface ApiService {
     Call<ResponseBody> updateFcmToken(
             @Body RequestBody body
     );
+
+    @POST("api/itineraries")
+    Call<ResponseBody> saveItinerary(
+            @Body Itinerary itinerary
+    );
+
+    @GET("api/itineraries")
+    Call<List<Itinerary>> getSavedItineraries();
 }

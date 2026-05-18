@@ -113,11 +113,13 @@ public class ItineraryListFragment extends Fragment {
     private void displayItineraries(List<Itinerary> itineraries) {
         binding.recyclerViewItineraries.setLayoutManager(new LinearLayoutManager(getContext()));
         ItineraryAdapter adapter = new ItineraryAdapter(itineraries, itinerary -> {
-            MapFragment mapFragment = new MapFragment();
-            Bundle mapArgs = new Bundle();
-            mapArgs.putSerializable("itinerary", itinerary);
-            mapFragment.setArguments(mapArgs);
-            ((MainActivity) requireActivity()).navigateTo(mapFragment, 1);
+            MainActivity mainActivity = (MainActivity) requireActivity();
+            MapFragment mapFragment = mainActivity.getExistingFragment(MapFragment.class);
+
+            if (mapFragment != null) {
+                mapFragment.setItineraryAndDisplay(itinerary);
+                mainActivity.navigateTo(mapFragment, 1);
+            }
         });
         binding.recyclerViewItineraries.setAdapter(adapter);
     }

@@ -16,12 +16,15 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
@@ -46,6 +49,7 @@ import fds.hai811i.pathio.model.POI;
 import fds.hai811i.pathio.model.responses.OSRMResponse;
 import fds.hai811i.pathio.utils.LocationUtils;
 import fds.hai811i.pathio.utils.RetrofitClient;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -97,6 +101,7 @@ public class MapFragment extends Fragment {
         binding.btnZoomIn.setOnClickListener(v -> mapController.zoomIn());
         binding.btnZoomOut.setOnClickListener(v -> mapController.zoomOut());
         binding.btnLocate.setOnClickListener(v -> onLocateClicked());
+        binding.btnMenu.setOnClickListener(v -> showMapMenu(v));
 
         if (LocationUtils.hasLocationPermission(requireContext())) {
             enableUserLocation();
@@ -106,6 +111,82 @@ public class MapFragment extends Fragment {
 
         handleIncomingData();
     }
+
+    private void showMapMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(requireContext(), anchor);
+
+        // Ajouter les options
+        popup.getMenu().add(0, 1, 0, "Sauvegarder l'itinéraire");
+        popup.getMenu().add(0, 2, 1, "Effacer l'itinéraire"); // <-- NOUVELLE OPTION
+
+        // Désactiver les boutons s'il n'y a pas d'itinéraire affiché
+        if (displayedItinerary == null || displayedItinerary.steps == null || displayedItinerary.steps.isEmpty()) {
+            popup.getMenu().getItem(0).setEnabled(false);
+            popup.getMenu().getItem(1).setEnabled(false); // Désactive aussi le bouton effacer
+        }
+
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 1) {
+                showSaveDialog();
+                return true;
+            } else if (item.getItemId() == 2) {
+                clearItinerary();
+                return true;
+            }
+            return false;
+        });
+
+        popup.show();
+    }
+
+    private void showSaveDialog() {
+        final EditText input = new EditText(requireContext());
+        input.setHint("Ex: Balade du dimanche");
+
+        if (displayedItinerary.title != null && !displayedItinerary.title.equals("Itinéraire direct")) {
+            input.setText(displayedItinerary.title);
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Sauvegarder l'itinéraire")
+                .setMessage("Donnez un nom à cet itinéraire :")
+                .setView(input)
+                .setPositiveButton("Sauvegarder", (dialog, which) -> {
+                    String itineraryName = input.getText().toString().trim();
+                    if (itineraryName.isEmpty()) {
+                        Toast.makeText(getContext(), "Le nom ne peut pas être vide", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Mettre à jour le nom de l'itinéraire
+                    displayedItinerary.title = itineraryName;
+
+                    saveItineraryToBackend(displayedItinerary);
+                })
+                .setNegativeButton("Annuler", null)
+                .show();
+    }
+
+    private void saveItineraryToBackend(Itinerary itinerary) {
+        RetrofitClient.getApi(requireContext()).saveItinerary(itinerary).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                Toast.makeText(getContext(), "Itinéraire sauvegardé avec succès !", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void clearItinerary() {
+        displayedItinerary = null;
+        binding.mapView.getOverlays().removeIf(overlay -> overlay instanceof Marker || overlay instanceof Polyline);
+        binding.mapView.invalidate();
+        Toast.makeText(getContext(), "Itinéraire effacé", Toast.LENGTH_SHORT).show();
+    }
+
 
     private void handleIncomingData() {
         if (getArguments() != null) {
@@ -339,6 +420,15 @@ public class MapFragment extends Fragment {
                 });
             }
         });
+    }
+
+    public void setItineraryAndDisplay(Itinerary itinerary) {
+        this.displayedItinerary = itinerary;
+        displayItinerary(itinerary);
+    }
+
+    public void setTargetLocationAndDisplay(String locationName) {
+        generateItineraryToLocation(locationName);
     }
 
     @Override
