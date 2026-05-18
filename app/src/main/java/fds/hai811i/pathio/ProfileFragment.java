@@ -96,6 +96,8 @@ public class ProfileFragment extends Fragment {
 
         if (token != null) {
             binding.loggedState.setText(String.format("%s", "Vous êtes connecté"));
+            ((MainActivity) requireActivity()).setupNotificationsIfLoggedIn();
+
             binding.btnLogin.setVisibility(View.GONE);
             binding.btnRegister.setVisibility(View.GONE);
             binding.btnLogout.setVisibility(View.VISIBLE);

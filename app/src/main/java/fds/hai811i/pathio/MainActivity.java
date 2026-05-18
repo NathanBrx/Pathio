@@ -1,14 +1,33 @@
 package fds.hai811i.pathio;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import fds.hai811i.pathio.databinding.ActivityMainBinding;
+import fds.hai811i.pathio.utils.RetrofitClient;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
@@ -25,6 +44,15 @@ public class MainActivity extends AppCompatActivity {
     private final Fragment profileFragment = new ProfileFragment();
     private final FragmentManager fm = getSupportFragmentManager();
     private Fragment activeFragment = homeFragment;
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    fetchAndSyncFcmToken();
+                } else {
+                    Log.w("FCM", "Permission de notification refusée par l'utilisateur.");
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +91,58 @@ public class MainActivity extends AppCompatActivity {
         binding.navHome.setOnClickListener(v -> navigateTo(homeFragment, 2));
         binding.navGallery.setOnClickListener(v -> navigateTo(galleryFragment, 3));
         binding.navProfile.setOnClickListener(v -> navigateTo(profileFragment, 4));
+
+        setupNotificationsIfLoggedIn();
+    }
+
+    public void setupNotificationsIfLoggedIn() {
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        String token = prefs.getString("jwt_token", null);
+
+        if (token != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                    fetchAndSyncFcmToken();
+                } else {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+                }
+            } else {
+                fetchAndSyncFcmToken();
+            }
+        }
+    }
+
+    private void fetchAndSyncFcmToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w("FCM", "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
+
+                    // Get new FCM registration token
+                    String fcmToken = task.getResult();
+                    Log.d("FCM", "Token obtenu : " + fcmToken);
+
+                    // Save locally just in case
+                    getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+                            .edit().putString("fcm_token", fcmToken).apply();
+
+                    // Send to Node.js backend
+                    String json = "{\"fcm_token\":\"" + fcmToken + "\"}";
+                    RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+
+                    RetrofitClient.getApi(this).updateFcmToken(body).enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                            if(response.isSuccessful()) Log.d("FCM", "Token synchronisé avec succès !");
+                        }
+                        @Override
+                        public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                            Log.e("FCM", "Erreur de synchro du token : " + t.getMessage());
+                        }
+                    });
+                });
     }
 
     private void updateNavUI(int selectedIndex) {

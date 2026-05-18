@@ -87,4 +87,9 @@ public interface ApiService {
     Call<List<Post>> getGroupPosts(
             @Path("groupId") int groupId
     );
+
+    @PUT("api/profile/fcm-token")
+    Call<ResponseBody> updateFcmToken(
+            @Body RequestBody body
+    );
 }

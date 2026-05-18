@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1098791011489",
+    "project_id": "pathio-65ce3",
+    "storage_bucket": "pathio-65ce3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1098791011489:android:0f107dc377fdb3528f9ce0",
+        "android_client_info": {
+          "package_name": "fds.hai811i.pathio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQYlsKodSCTLdZT3xF6QNTAfQYvX_bh7s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
