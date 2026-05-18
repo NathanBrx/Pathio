@@ -79,7 +79,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         holder.time.setText(localTime);
 
         Glide.with(holder.itemView.getContext())
-                .load("https://www.zerohour.fr/" + comment.getAvatarUrl())
+                .load("https://www.zerohour.fr" + comment.getAvatarUrl())
                 .centerCrop()
                 .placeholder(android.R.color.darker_gray)
                 .fallback(R.drawable.outline_person_24) // si pp est null ou url cassée

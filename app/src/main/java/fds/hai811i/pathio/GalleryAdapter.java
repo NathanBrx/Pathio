@@ -157,7 +157,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.PostView
         holder.username.setText(author.getUsername());
 
         Glide.with(holder.itemView.getContext())
-                .load("https://www.zerohour.fr/" + author.getAvatarUrl())
+                .load("https://www.zerohour.fr" + author.getAvatarUrl())
                 .centerCrop()
                 .placeholder(android.R.color.darker_gray)
                 .fallback(R.drawable.outline_person_24) // si pp est null ou url cassée
