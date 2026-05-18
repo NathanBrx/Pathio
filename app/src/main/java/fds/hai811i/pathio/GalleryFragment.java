@@ -54,7 +54,16 @@ public class GalleryFragment extends Fragment {
 
         mainActivity = (MainActivity) requireActivity();
 
-        binding.btnNewPost.setOnClickListener(v -> mainActivity.navigateTo(new NewPostFragment(), 3));
+        binding.btnNewPost.setOnClickListener(v -> {
+            SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+            String currentToken = prefs.getString("jwt_token", null);
+
+            if (currentToken == null) {
+                Toast.makeText(getContext(), "Connectez-vous pour poster !", Toast.LENGTH_SHORT).show();
+            } else {
+                mainActivity.navigateTo(new NewPostFragment(), 3);
+            }
+        });
         binding.btnFilterPhotos.setOnClickListener(v -> showPhotosTab());
         binding.btnFilterGroups.setOnClickListener(v -> showGroupsTab());
 

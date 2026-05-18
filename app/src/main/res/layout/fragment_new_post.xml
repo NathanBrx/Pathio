@@ -280,7 +280,7 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
-
+<!--
         <androidx.cardview.widget.CardView
             android:id="@+id/aiTagsContainer"
             android:layout_width="match_parent"
@@ -347,7 +347,7 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
-
+-->
         <androidx.cardview.widget.CardView
             android:id="@+id/voiceContainer"
             android:layout_width="match_parent"
@@ -356,7 +356,7 @@
             app:cardBackgroundColor="#F5F2EF"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
-            app:layout_constraintTop_toBottomOf="@id/aiTagsContainer">
+            app:layout_constraintTop_toBottomOf="@id/captionContainer">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"

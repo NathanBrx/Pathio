@@ -28,6 +28,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -60,7 +64,23 @@ public class NewPostFragment extends Fragment {
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
                     selectedImageUri = uri;
-                    binding.textTapUpload.setText(uri.toString());
+
+                    binding.uploadIconContainer.setVisibility(View.GONE);
+                    binding.textTapUpload.setVisibility(View.GONE);
+
+                    android.widget.ImageView previewImage = new android.widget.ImageView(requireContext());
+                    previewImage.setLayoutParams(new androidx.constraintlayout.widget.ConstraintLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                    ));
+
+                    binding.uploadArea.removeAllViews();
+                    binding.uploadArea.addView(previewImage);
+
+                    Glide.with(this)
+                            .load(uri)
+                            .transform(new CenterCrop(), new RoundedCorners(32)) // 32 = rayon des bords arrondis (12dp environ)
+                            .into(previewImage);
                 }
             });
 
@@ -162,7 +182,7 @@ public class NewPostFragment extends Fragment {
 
         binding.btnPublish.setOnClickListener(v -> {
             String caption = binding.inputCaption.getText() != null ? binding.inputCaption.getText().toString().trim() : "";
-            String location = binding.location.getText() != null ? binding.location.getText().toString().trim() : "";
+            String location = binding.location.getText().toString().contains("inconnue") ? "" : binding.location.getText().toString().trim();
             String audioPath = binding.switchVoice.isChecked() ? audioRecorder.getCurrentAudioPath() : null;
 
             // Validation
