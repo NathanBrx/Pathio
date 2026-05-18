@@ -5,12 +5,18 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -19,6 +25,8 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+
+import java.util.Stack;
 
 import fds.hai811i.pathio.databinding.ActivityMainBinding;
 import fds.hai811i.pathio.utils.RetrofitClient;
@@ -44,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     private final Fragment profileFragment = new ProfileFragment();
     private final FragmentManager fm = getSupportFragmentManager();
     private Fragment activeFragment = homeFragment;
+    private final Stack<Integer> tabHistory = new Stack<>();
+    private int currentTabIndex = 2;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -91,6 +101,21 @@ public class MainActivity extends AppCompatActivity {
         binding.navHome.setOnClickListener(v -> navigateTo(homeFragment, 2));
         binding.navGallery.setOnClickListener(v -> navigateTo(galleryFragment, 3));
         binding.navProfile.setOnClickListener(v -> navigateTo(profileFragment, 4));
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (tabHistory.isEmpty()) {
+                    finish();
+                } else {
+                    int previousTab = tabHistory.pop();
+                    currentTabIndex = previousTab;
+                    Fragment target = getFragmentForIndex(previousTab);
+
+                    performNavigation(target, previousTab);
+                }
+            }
+        });
 
         setupNotificationsIfLoggedIn();
     }
@@ -160,6 +185,15 @@ public class MainActivity extends AppCompatActivity {
     public void navigateTo(Fragment targetFragment, int navIndex) {
         if (activeFragment == targetFragment) return;
 
+        if (tabHistory.isEmpty() || tabHistory.peek() != currentTabIndex) {
+            tabHistory.push(currentTabIndex);
+        }
+
+        currentTabIndex = navIndex;
+        performNavigation(targetFragment, navIndex);
+    }
+
+    private void performNavigation(Fragment targetFragment, int navIndex) {
         updateNavUI(navIndex);
 
         androidx.fragment.app.FragmentTransaction transaction = fm.beginTransaction()
@@ -176,6 +210,16 @@ public class MainActivity extends AppCompatActivity {
         activeFragment = targetFragment;
     }
 
+    private Fragment getFragmentForIndex(int index) {
+        switch (index) {
+            case 0: return newPathFragment;
+            case 1: return mapFragment;
+            case 3: return galleryFragment;
+            case 4: return profileFragment;
+            default: return homeFragment;
+        }
+    }
+
     /**
      * Getter for already loaded fragments. Used in "back_buttons"
      * @param fragmentClass Class of the fragment to return to
@@ -189,5 +233,26 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if (v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+
+                if (!outRect.contains((int) event.getRawX(), (int) event.getRawY())) {
+                    v.clearFocus();
+
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
     }
 }
