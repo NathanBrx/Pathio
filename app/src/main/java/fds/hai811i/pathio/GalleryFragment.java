@@ -66,13 +66,13 @@ public class GalleryFragment extends Fragment {
         galleryAdapter = new GalleryAdapter();
         groupAdapter = new GroupAdapter();
 
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-        String token = prefs.getString("jwt_token", null);
-
         Fragment originalProfile = mainActivity.getExistingFragment(ProfileFragment.class);
 
         galleryAdapter.setOnLikeClickListener((post, position) -> {
-            if (token == null) {
+            SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+            String currentToken = prefs.getString("jwt_token", null);
+
+            if (currentToken == null) {
                 Toast.makeText(getContext(), "Connectez-vous pour aimer un post !", Toast.LENGTH_SHORT).show();
                 mainActivity.navigateTo(originalProfile, 4);
                 return;
@@ -98,7 +98,10 @@ public class GalleryFragment extends Fragment {
         });
 
         galleryAdapter.setOnCommentClickListener(postId -> {
-            if (token == null) {
+            SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+            String currentToken = prefs.getString("jwt_token", null);
+
+            if (currentToken == null) {
                 Toast.makeText(getContext(), "Connectez-vous pour commenter un post !", Toast.LENGTH_SHORT).show();
                 mainActivity.navigateTo(originalProfile, 4);
                 return;
@@ -112,6 +115,8 @@ public class GalleryFragment extends Fragment {
 
             ((MainActivity) requireActivity()).navigateTo(commentsFragment, 3);
         });
+
+        // ... Le reste de votre code (AudioPlayClickListener, MapClickListener) reste exactement le même ...
 
         galleryAdapter.setOnAudioPlayClickListener((post, btnPlay, seekBar, txtTime) -> {
             String fullUrl = "https://www.zerohour.fr/" + post.getAudioUrl();
